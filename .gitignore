@@ -415,3 +415,13 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# User Secrets
+secrets.json
+secrets.*.json
+
+# Локальные конфиги
+appsettings.Development.json
+appsettings.*.local.json
+
+/Diplom-CRM/Properties/serviceDependencies.local.json
