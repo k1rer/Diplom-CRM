@@ -425,3 +425,4 @@ appsettings.Development.json
 appsettings.*.local.json
 
 /Diplom-CRM/Properties/serviceDependencies.local.json
+/Properties/serviceDependencies.local.json
