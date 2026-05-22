@@ -17,7 +17,7 @@ namespace Diplom_CRM.Data.Entities
         [Precision(18, 2)]
         public decimal Amount { get; set; }
 
-        public StatusEnum Status { get; set; }
+        public StatusEnum Status { get; set; } = StatusEnum.New;
 
         public DateTime ExpectedCloseDate { get; set; }
 

@@ -1,3 +1,6 @@
+using Diplom_CRM.Services;
+using Diplom_CRM.Services.Implementations;
+
 namespace Diplom_CRM
 {
     public class Program
@@ -11,6 +14,11 @@ namespace Diplom_CRM
                 throw new MissingFieldException("Failed to get Default connection string");
 
             builder.Services.AddControllersWithViews();
+
+            builder.Services.AddScoped<IClientService, ClientService>();
+            builder.Services.AddScoped<IDealService, DealService>();
+            builder.Services.AddScoped<IActivityService, ActivityService>();
+            builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 
             var app = builder.Build();
 

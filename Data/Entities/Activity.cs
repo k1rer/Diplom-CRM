@@ -10,7 +10,6 @@ namespace Diplom_CRM.Data.Entities
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        [MaxLength(50)]
         public TypeEnum Type { get; set; }
 
         [MaxLength(200)]
