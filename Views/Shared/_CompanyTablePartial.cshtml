@@ -1,0 +1,51 @@
+﻿@model Diplom_CRM.Models.View.CompanyIndexViewModel
+
+<div id="company-table" hx-target="this" hx-swap="outerHTML">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Название</th>
+                <th>Отрасль</th>
+                <th>Город</th>
+                <th>Контактов</th>
+                <th>Создана</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var company in Model.Companies.Items)
+            {
+                <tr>
+                    <td>@company.Name</td>
+                    <td>@company.Industry</td>
+                    <td>@company.City</td>
+                    <td>@company.ContactsCount</td>
+                    <td>@company.CreatedAt.ToShortDateString()</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <nav>
+        <ul class="pagination">
+            @if (Model.Companies.HasPreviousPage)
+            {
+                <li class="page-item">
+                    <a class="page-link"
+                       hx-get="@Url.Action("Index", "Company", new { page = Model.CurrentPage - 1, searchTerm = Model.SearchTerm })"
+                       hx-target="#company-table"
+                       hx-swap="outerHTML">Назад</a>
+                </li>
+            }
+            <li class="page-item disabled"><span class="page-link">@Model.CurrentPage</span></li>
+            @if (Model.Companies.HasNextPage)
+            {
+                <li class="page-item">
+                    <a class="page-link"
+                       hx-get="@Url.Action("Index", "Company", new { page = Model.CurrentPage + 1, searchTerm = Model.SearchTerm })"
+                       hx-target="#company-table"
+                       hx-swap="outerHTML">Вперёд</a>
+                </li>
+            }
+        </ul>
+    </nav>
+</div>

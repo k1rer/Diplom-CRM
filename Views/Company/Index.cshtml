@@ -1,0 +1,54 @@
+﻿@model Diplom_CRM.Models.View.CompanyIndexViewModel
+@{
+    ViewData["Title"] = "Управление клиентами";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Управление клиентами</h2>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCompanyModal">
+            + Добавить клиента
+        </button>
+    </div>
+
+    <div class="input-group mb-3">
+        <input type="text" id="searchInput" name="searchTerm" class="form-control"
+               placeholder="Поиск по названию или телефону..."
+               hx-get="/Company/Index"
+               hx-trigger="keyup changed delay:500ms, search"
+               hx-target="#companyTableContainer"
+               hx-indicator="#searchIndicator"
+               value="@Model.SearchTerm" />
+        <button class="btn btn-outline-secondary" type="button"
+                hx-get="/Company/Index"
+                hx-include="[name='searchTerm']"
+                hx-target="#companyTableContainer"
+                hx-indicator="#searchIndicator">
+            Найти
+        </button>
+    </div>
+
+    <div id="searchIndicator" class="htmx-indicator text-center mb-3">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Загрузка...</span>
+        </div>
+    </div>
+
+    <div id="companyTableContainer">
+        @await Html.PartialAsync("_CompanyTablePartial", Model)
+    </div>
+</div>
+
+<div class="modal fade" id="addCompanyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Новая компания</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Форма создания компании (будет добавлена позже).</p>
+            </div>
+        </div>
+    </div>
+</div>

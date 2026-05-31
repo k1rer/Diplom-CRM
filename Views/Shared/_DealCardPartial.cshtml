@@ -1,0 +1,11 @@
+﻿@model Diplom_CRM.Models.DTO.DealKanbanDTO
+
+<div class="card deal-card" data-deal-id="@Model.Id">
+    <div class="card-body">
+        <h5>@Model.Name</h5>
+        <p>@Model.CompanyName</p>
+        <p>@Model.Amount.ToString("C")</p>
+        <small>@Model.ExpectedCloseDate.ToShortDateString()</small>
+        <span>@Model.ContactName</span>
+    </div>
+</div>

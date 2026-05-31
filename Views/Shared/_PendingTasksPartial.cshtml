@@ -1,0 +1,28 @@
+﻿@model List<Diplom_CRM.Models.DTO.ActivityListItemDTO>
+
+<div id="pending-tasks" hx-swap="outerHTML">
+    @if (Model.Any())
+    {
+        <ul class="list-group">
+            @foreach (var task in Model)
+            {
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>@task.Subject</strong>
+                        <small class="text-muted">@task.ContactName</small>
+                        <span>@task.ScheduledDate.ToShortDateString()</span>
+                    </div>
+                    <input type="checkbox"
+                           hx-post="@Url.Action("CompleteTask", "Activity", new { activityId = task.Id })"
+                           hx-target="#pending-tasks"
+                           hx-trigger="change"
+                    @(task.IsCompleted ? "checked" : "") />
+                </li>
+            }
+        </ul>
+    }
+    else
+    {
+        <p>Нет просроченных задач</p>
+    }
+</div>
