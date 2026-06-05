@@ -8,9 +8,9 @@ namespace Diplom_CRM.Services.Implementations;
 
 public class ClientService : IClientService
 {
-    private readonly ApplicationDbContext _db;
+    private readonly AppDbContext _db;
 
-    public ClientService(ApplicationDbContext db)
+    public ClientService(AppDbContext db)
     {
         _db = db;
     }

@@ -1,0 +1,72 @@
+﻿@using Diplom_CRM.Models.DTO
+@model IEnumerable<ActivityDTO>
+
+@functions {
+    string GetActivityIcon(string type) => type switch
+    {
+        "Call" => "bi-telephone-fill",
+        "Email" => "bi-envelope-fill",
+        "Meeting" => "bi-people-fill",
+        "Task" => "bi-check2-square",
+        _ => "bi-circle"
+    };
+
+    string GetActivityColorClass(string type) => type switch
+    {
+        "Call" => "border-primary",
+        "Email" => "border-info",
+        "Meeting" => "border-success",
+        "Task" => "border-warning",
+        _ => "border-secondary"
+    };
+
+    string GetActivityTextColor(string type) => type switch
+    {
+        "Call" => "text-primary",
+        "Email" => "text-info",
+        "Meeting" => "text-success",
+        "Task" => "text-warning",
+        _ => "text-secondary"
+    };
+}
+
+<div class="timeline">
+    @foreach (var activity in Model)
+    {
+        var typeString = activity.Type.ToString();
+        var icon = GetActivityIcon(typeString);
+        var borderClass = GetActivityColorClass(typeString);
+        var textClass = GetActivityTextColor(typeString);
+
+        <div class="d-flex mb-3">
+            <div class="me-3">
+                <i class="bi @icon @textClass fs-4"></i>
+            </div>
+            <div class="flex-grow-1 border-start border-3 @borderClass ps-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">@activity.ScheduledDate.ToString("dd.MM.yyyy HH:mm")</small>
+                    <span class="badge bg-@borderClass.Replace("border-", "")">@typeString</span>
+                </div>
+                <h6 class="mb-1">@activity.Subject</h6>
+                @if (!string.IsNullOrWhiteSpace(activity.Description))
+                {
+                    <p class="mb-1">@activity.Description</p>
+                }
+                @if (typeString == "Task")
+                {
+                    <div class="form-check mt-1">
+                        <input class="form-check-input" type="checkbox"
+                               hx-post="/Activity/CompleteTask?id=@activity.Id"
+                               hx-target="#timelineContainer"
+                               hx-swap="innerHTML" />
+                        <label class="form-check-label">Выполнено</label>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    @if (!Model.Any())
+    {
+        <div class="text-muted fst-italic">Активностей пока нет</div>
+    }
+</div>

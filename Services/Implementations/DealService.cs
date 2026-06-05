@@ -10,9 +10,9 @@ namespace Diplom_CRM.Services.Implementations;
 
 public class DealService : IDealService
 {
-    private readonly ApplicationDbContext _db;
+    private readonly AppDbContext _db;
 
-    public DealService(ApplicationDbContext db)
+    public DealService(AppDbContext db)
     {
         _db = db;
     }

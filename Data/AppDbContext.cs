@@ -5,19 +5,19 @@ using Activity = Diplom_CRM.Data.Entities.Activity;
 
 namespace Diplom_CRM.Data
 {
-    public class ApplicationDbContext : DbContext
+    public class AppDbContext : DbContext
     {
         public DbSet<Contact> Contacts { get; set; }
         public DbSet<Company> Companies { get; set; }
         public DbSet<Deal> Deals { get; set; }
         public DbSet<Activity> Activities { get; set; }
 
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+        public AppDbContext(DbContextOptions<AppDbContext> options)
             : base(options)
         {
         }
 
-        public ApplicationDbContext() { }
+        public AppDbContext() { }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

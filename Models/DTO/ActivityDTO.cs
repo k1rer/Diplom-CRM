@@ -4,6 +4,7 @@ namespace Diplom_CRM.Models.DTO
 {
     public class ActivityDTO
     {
+        public int Id { get; set; }
         public TypeEnum Type { get; set; }
         public string Subject { get; set; } = string.Empty;
         public string? Description { get; set; }

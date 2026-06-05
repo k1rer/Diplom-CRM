@@ -1,5 +1,7 @@
+using Diplom_CRM.Data;
 using Diplom_CRM.Services;
 using Diplom_CRM.Services.Implementations;
+using Microsoft.EntityFrameworkCore;
 
 namespace Diplom_CRM
 {
@@ -12,6 +14,9 @@ namespace Diplom_CRM
             string? connectionString = builder.Configuration.GetConnectionString("Default");
             if (string.IsNullOrWhiteSpace(connectionString))
                 throw new MissingFieldException("Failed to get Default connection string");
+
+            builder.Services.AddDbContext<AppDbContext>(options =>
+            options.UseNpgsql(connectionString));
 
             builder.Services.AddControllersWithViews();
 
@@ -30,7 +35,6 @@ namespace Diplom_CRM
 
             app.UseHttpsRedirection();
             app.UseRouting();
-
             app.UseAuthorization();
 
             app.MapStaticAssets();

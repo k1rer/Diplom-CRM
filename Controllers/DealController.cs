@@ -12,9 +12,9 @@ namespace Diplom_CRM.Controllers;
 public class DealController : Controller
 {
     private readonly IDealService _dealService;
-    private readonly ApplicationDbContext _db;
+    private readonly AppDbContext _db;
 
-    public DealController(IDealService dealService, ApplicationDbContext db)
+    public DealController(IDealService dealService, AppDbContext db)
     {
         _dealService = dealService;
         _db = db;

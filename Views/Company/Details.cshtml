@@ -1,0 +1,177 @@
+﻿@model Diplom_CRM.Models.View.CompanyDetailsViewModel
+@using Diplom_CRM.Models.DTO
+@{
+    ViewData["Title"] = $"Клиент: {Model.Company?.Name}";
+    var company = Model.Company;
+    var contacts = Model.Contacts ?? new List<ContactDTO>();
+    var activities = Model.Activities ?? new List<ActivityDTO>();
+}
+
+<div class="container-fluid">
+    <h2 class="mb-4">@company?.Name</h2>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">@company?.Name</h5>
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5">Отрасль</dt>
+                        <dd class="col-sm-7">@(company?.Industry ?? "—")</dd>
+
+                        <dt class="col-sm-5">Сайт</dt>
+                        <dd class="col-sm-7">
+                            @if (!string.IsNullOrWhiteSpace(company?.Website))
+                            {
+                                <a href="@company.Website" target="_blank">@company.Website</a>
+                            }
+                            else
+                            {
+                                <span>—</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-5">Телефон</dt>
+                        <dd class="col-sm-7">@(company?.Phone ?? "—")</dd>
+
+                        <dt class="col-sm-5">Адрес</dt>
+                        <dd class="col-sm-7">@(company?.Address ?? "—")</dd>
+
+                        <dt class="col-sm-5">Город</dt>
+                        <dd class="col-sm-7">@(company?.City ?? "—")</dd>
+
+                        <dt class="col-sm-5">Страна</dt>
+                        <dd class="col-sm-7">@(company?.Country ?? "—")</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="card" id="contactsListContainer">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span class="fw-bold">Контакты компании</span>
+                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addContactModal">
+                        + Добавить
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        @foreach (var contact in contacts)
+                        {
+                            <li class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <strong>@contact.FirstName @contact.LastName</strong>
+                                        <small class="text-muted d-block">@(contact.Position ?? "Без должности")</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <a href="tel:@contact.Phone" class="d-block text-decoration-none">@contact.Phone</a>
+                                        @if (!string.IsNullOrWhiteSpace(contact.Email))
+                                        {
+                                            <a href="mailto:@contact.Email" class="small">@contact.Email</a>
+                                        }
+                                    </div>
+                                </div>
+                            </li>
+                        }
+                        @if (!contacts.Any())
+                        {
+                            <li class="list-group-item text-muted">Нет добавленных контактов</li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <span class="fw-bold">Добавить активность</span>
+                </div>
+                <div class="card-body">
+                    <form hx-post="/Activity/Create"
+                          hx-target="#timelineContainer"
+                          hx-swap="innerHTML"
+                          hx-indicator="#activityIndicator">
+                        <input type="hidden" name="ContactId" value="@Model.Company?.Id" />
+
+                        <div class="mb-3">
+                            <label for="activitySubject" class="form-label">Тема / Заголовок</label>
+                            <input type="text" class="form-control" id="activitySubject" name="Subject"
+                                   placeholder="Краткое описание" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="activityDescription" class="form-label">Подробности</label>
+                            <textarea class="form-control" id="activityDescription" name="Description" rows="2"
+                                      placeholder="Опишите звонок, встречу или задачу..."></textarea>
+                        </div>
+
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-6">
+                                <label for="activityType" class="form-label">Тип</label>
+                                <select class="form-select" id="activityType" name="Type">
+                                    <option value="Call">Звонок</option>
+                                    <option value="Email">Email</option>
+                                    <option value="Meeting">Встреча</option>
+                                    <option value="Task">Задача</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <span class="htmx-indicator" id="activityIndicator">
+                                        <span class="spinner-border spinner-border-sm me-1"></span>
+                                    </span>
+                                    Сохранить
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div id="timelineContainer">
+                @await Html.PartialAsync("_TimelinePartial", activities)
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addContactModal" tabindex="-1" aria-labelledby="addContactModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addContactModalLabel">Новый контакт</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <form hx-post="/Company/AddContact"
+                  hx-target="#contactsListContainer"
+                  hx-swap="innerHTML">
+                <input type="hidden" name="companyId" value="@Model.Company?.Id" />
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Имя *</label>
+                        <input type="text" class="form-control" name="FirstName" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Фамилия</label>
+                        <input type="text" class="form-control" name="LastName" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Должность</label>
+                        <input type="text" class="form-control" name="Position" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Телефон</label>
+                        <input type="text" class="form-control" name="Phone" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" name="Email" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
