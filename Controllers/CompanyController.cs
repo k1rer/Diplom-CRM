@@ -1,4 +1,5 @@
-﻿using Diplom_CRM.Extensions;
+﻿using Diplom_CRM.Exceptions;
+using Diplom_CRM.Extensions;
 using Diplom_CRM.Models.DTO;
 using Diplom_CRM.Models.View;
 using Diplom_CRM.Services;
@@ -34,23 +35,47 @@ public class CompanyController : Controller
 
         return View(viewModel);
     }
+    [HttpGet]
+    public IActionResult Create()
+    {
+        return PartialView("_CreateCompanyPartial", new CompanyDTO());
+    }
 
-    // POST: Company/Create
     [HttpPost]
     public async Task<IActionResult> Create(CompanyDTO dto)
     {
         if (!ModelState.IsValid)
         {
-            return Request.IsHtmxRequest()
-                ? PartialView("_CompanyFormPartial", dto)
-                : View(dto);
+            Response.Headers["HX-Retarget"] = "#companyModal .modal-body";
+            return PartialView("_CreateCompanyPartial", dto);
         }
 
-        await _clientService.CreateCompanyAsync(dto);
+        try
+        {
+            await _clientService.CreateCompanyAsync(dto);
+        }
+        catch (DuplicateEntityException ex)
+        {
+            ModelState.AddModelError("Phone", ex.Message);
+            Response.Headers["HX-Retarget"] = "#companyModal .modal-body";
+            return PartialView("_CreateCompanyPartial", dto);
+        }
 
-        if (Request.IsHtmxRequest())
-            return RedirectToAction(nameof(Index));
+        var updatedTable = await GetCompanyTablePartialView();
+        Response.Headers["HX-Trigger"] = "closeModal";
+        return updatedTable;
+    }
 
-        return RedirectToAction(nameof(Index));
+    private async Task<PartialViewResult> GetCompanyTablePartialView()
+    {
+        const int pageSize = 10;
+        var paged = await _clientService.GetPagedCompaniesAsync(1, pageSize, null);
+        var viewModel = new CompanyIndexViewModel
+        {
+            Companies = paged,
+            SearchTerm = null,
+            CurrentPage = 1
+        };
+        return PartialView("_CompanyTablePartial", viewModel);
     }
 }

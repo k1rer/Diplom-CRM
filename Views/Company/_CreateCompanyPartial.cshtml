@@ -1,0 +1,45 @@
+﻿@model Diplom_CRM.Models.DTO.CompanyDTO
+
+<form hx-post="/Company/Create"
+      hx-target="#companyTableContainer"
+      hx-swap="innerHTML">
+
+    <div class="mb-3">
+        <label asp-for="Name" class="form-label">Название *</label>
+        <input asp-for="Name" class="form-control" required />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Industry" class="form-label">Отрасль</label>
+        <input asp-for="Industry" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Phone" class="form-label">Телефон</label>
+        <input asp-for="Phone" class="form-control" />
+        <span asp-validation-for="Phone" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Website" class="form-label">Сайт</label>
+        <input asp-for="Website" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Address" class="form-label">Адрес</label>
+        <input asp-for="Address" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="City" class="form-label">Город</label>
+        <input asp-for="City" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Country" class="form-label">Страна</label>
+        <input asp-for="Country" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Сохранить</button>
+</form>
