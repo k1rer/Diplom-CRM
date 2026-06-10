@@ -1,8 +1,6 @@
 ﻿using Diplom_CRM.Data;
-using Diplom_CRM.Data.Entities;
 using Diplom_CRM.Data.Enums;
 using Diplom_CRM.Models.DTO;
-using Diplom_CRM.Services;
 using Microsoft.EntityFrameworkCore;
 using Activity = Diplom_CRM.Data.Entities.Activity;
 
@@ -58,16 +56,16 @@ public class ActivityService : IActivityService
         };
     }
 
-    public async Task SetTaskAsCompletedAsync(int activityId)
+    public async Task ToggleTaskCompletionAsync(int activityId)
     {
         var activity = await _db.Activities.FindAsync(activityId)
             ?? throw new KeyNotFoundException($"Активность с Id={activityId} не найдена.");
 
         if (activity.Type != TypeEnum.Task)
-            throw new InvalidOperationException("Завершить можно только активность с типом «Задача».");
+            throw new InvalidOperationException("Переключать можно только задачи.");
 
-        activity.IsCompleted = true;
-        activity.CompletedDate = DateTime.UtcNow;
+        activity.IsCompleted = !activity.IsCompleted;
+        activity.CompletedDate = activity.IsCompleted ? DateTime.UtcNow : null;
 
         await _db.SaveChangesAsync();
     }
@@ -96,5 +94,51 @@ public class ActivityService : IActivityService
                 DealName = a.Deal != null ? a.Deal.Name : null
             })
             .ToListAsync();
+    }
+    public async Task<List<ActivityDTO>> GetActivitiesByCompanyIdAsync(int companyId)
+    {
+        var company = await _db.Companies
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == companyId);
+
+        if (company == null)
+            return new List<ActivityDTO>();
+
+        var contactIds = await _db.Contacts
+            .Where(c => c.Company == company.Name)
+            .Select(c => c.Id)
+            .ToListAsync();
+
+        if (!contactIds.Any())
+            return new List<ActivityDTO>();
+
+        return await _db.Activities
+            .AsNoTracking()
+            .Where(a => contactIds.Contains(a.ContactId))
+            .OrderByDescending(a => a.ScheduledDate)
+            .ThenByDescending(a => a.Id)
+            .Select(a => new ActivityDTO
+            {
+                Id = a.Id,
+                Type = a.Type,
+                Subject = a.Subject,
+                Description = a.Description,
+                ScheduledDate = a.ScheduledDate > DateTime.MinValue ? a.ScheduledDate : a.CreatedAt,
+                ContactId = a.ContactId,
+                DealId = a.DealId,
+                CompanyId = companyId,
+                IsCompleted = a.IsCompleted
+            })
+            .ToListAsync();
+    }
+
+    public async Task DeleteActivityAsync(int activityId)
+    {
+        var activity = await _db.Activities.FindAsync(activityId);
+        if (activity != null)
+        {
+            _db.Activities.Remove(activity);
+            await _db.SaveChangesAsync();
+        }
     }
 }

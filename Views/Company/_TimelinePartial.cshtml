@@ -1,72 +1,108 @@
-﻿@using Diplom_CRM.Models.DTO
-@model IEnumerable<ActivityDTO>
+﻿@* === ФАЙЛ: Views/Company/_TimelinePartial.cshtml === *@
+@model IEnumerable<Diplom_CRM.Models.DTO.ActivityDTO>
 
-@functions {
-    string GetActivityIcon(string type) => type switch
-    {
-        "Call" => "bi-telephone-fill",
-        "Email" => "bi-envelope-fill",
-        "Meeting" => "bi-people-fill",
-        "Task" => "bi-check2-square",
-        _ => "bi-circle"
-    };
-
-    string GetActivityColorClass(string type) => type switch
-    {
-        "Call" => "border-primary",
-        "Email" => "border-info",
-        "Meeting" => "border-success",
-        "Task" => "border-warning",
-        _ => "border-secondary"
-    };
-
-    string GetActivityTextColor(string type) => type switch
-    {
-        "Call" => "text-primary",
-        "Email" => "text-info",
-        "Meeting" => "text-success",
-        "Task" => "text-warning",
-        _ => "text-secondary"
-    };
+@if (Model == null || !Model.Any())
+{
+    <p class="text-muted text-center py-3">История активностей пока пуста</p>
 }
+else
+{
+    <div class="position-relative border-start border-2 ps-4 ms-2">
+        @foreach (var activity in Model)
+        {
+            var isTask = activity.Type == Diplom_CRM.Data.Enums.TypeEnum.Task;
+            var completed = activity.IsCompleted;
 
-<div class="timeline">
-    @foreach (var activity in Model)
-    {
-        var typeString = activity.Type.ToString();
-        var icon = GetActivityIcon(typeString);
-        var borderClass = GetActivityColorClass(typeString);
-        var textClass = GetActivityTextColor(typeString);
+            <div class="mb-4 position-relative">
+                <!-- Кружок с иконкой типа -->
+                <span class="position-absolute start-0 translate-middle bg-white border rounded-circle p-1"
+                      style="left: -26px !important; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                    @switch (activity.Type.ToString())
+                    {
+                        case "Call":
+                            <i class="bi bi-telephone-fill text-primary"></i>
+                            break;
+                        case "Email":
 
-        <div class="d-flex mb-3">
-            <div class="me-3">
-                <i class="bi @icon @textClass fs-4"></i>
-            </div>
-            <div class="flex-grow-1 border-start border-3 @borderClass ps-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <small class="text-muted">@activity.ScheduledDate.ToString("dd.MM.yyyy HH:mm")</small>
-                    <span class="badge bg-@borderClass.Replace("border-", "")">@typeString</span>
-                </div>
-                <h6 class="mb-1">@activity.Subject</h6>
-                @if (!string.IsNullOrWhiteSpace(activity.Description))
-                {
-                    <p class="mb-1">@activity.Description</p>
-                }
-                @if (typeString == "Task")
-                {
-                    <div class="form-check mt-1">
-                        <input class="form-check-input" type="checkbox"
-                               hx-post="/Activity/CompleteTask?id=@activity.Id"
-                               hx-target="#timelineContainer"
-                               hx-swap="innerHTML" />
-                        <label class="form-check-label">Выполнено</label>
+                            <i class="bi bi-envelope-fill text-info"></i>
+                            break;
+                        case "Meeting":
+
+                            <i class="bi bi-people-fill text-success"></i>
+                            break;
+                        case "Task":
+
+                            <i class="bi bi-check2-square @(completed ? "text-success" : "text-warning")"></i>
+                            break;
+                        default:
+
+                            <i class="bi bi-circle text-secondary"></i>
+                            break;
+                    }
+                </span>
+
+                <!-- Карточка активности -->
+                <div class="card shadow-sm border-0 @(completed ? "bg-success bg-opacity-10 border-success" : "bg-light")">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between text-muted small mb-1">
+                            <strong>@activity.Type</strong>
+                            <span class="local-time" data-utc="@activity.ScheduledDate.ToString("o")">
+                                @activity.ScheduledDate.ToString("g")
+                            </span>
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(activity.Subject))
+                        {
+                            <h6 class="mb-1 @(completed ? "text-decoration-line-through" : "")">
+                                @activity.Subject
+                            </h6>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(activity.Description))
+                        {
+                            <p class="mb-1 @(completed ? "text-decoration-line-through" : "")">
+                                @activity.Description
+                            </p>
+                        }
+
+                        @if (isTask)
+                        {
+                            <div class="d-flex justify-content-end mt-2">
+                                <form hx-post="/Activity/ToggleTask"
+                                      hx-target="#timelineContainer"
+                                      hx-swap="innerHTML"
+                                      class="d-inline">
+                                    <input type="hidden" name="activityId" value="@activity.Id" />
+                                    <input type="hidden" name="companyId" value="@activity.CompanyId" />
+                                    <button type="submit"
+                                            class="btn btn-sm @(completed ? "btn-outline-secondary" : "btn-success")">
+                                        @if (completed)
+                                        {
+                                            <i class="bi bi-arrow-counterclockwise me-1"></i>
+                                            <text>Снять</text>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-check-lg me-1"></i>
+                                            <text>Выполнено</text>
+                                        }
+                                    </button>
+                                </form>
+                            </div>
+                        }
+
+                        <!-- Кнопка удаления (общая) -->
+                        <div class="text-end mt-1">
+                            <button class="btn btn-sm btn-outline-danger"
+                                    hx-delete="/Activity/Delete?activityId=@activity.Id&companyId=@activity.CompanyId"
+                                    hx-target="#timelineContainer"
+                                    hx-swap="innerHTML"
+                                    title="Удалить">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
                     </div>
-                }
+                </div>
             </div>
-        </div>
-    }
-    @if (!Model.Any())
-    {
-        <div class="text-muted fst-italic">Активностей пока нет</div>
-    }
-</div>
+        }
+    </div>
+}

@@ -8,5 +8,7 @@ namespace Diplom_CRM.Services
         Task<CompanyListItemDTO> CreateCompanyAsync(CompanyDTO dto);
         Task<ContactListItemDTO> AddContactToCompanyAsync(int companyId, ContactDTO dto);
         Task<List<TimelineItemDTO>> GetCompanyTimelineAsync(int companyId);
+        Task<CompanyDTO?> GetCompanyByIdAsync(int companyId);
+        Task<List<ContactDTO>> GetContactsByCompanyIdAsync(int companyId);
     }
 }

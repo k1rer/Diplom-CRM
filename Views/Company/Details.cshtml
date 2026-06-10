@@ -84,49 +84,76 @@
 
         <div class="col-md-8">
             <div class="card mb-4">
-                <div class="card-header">
-                    <span class="fw-bold">Добавить активность</span>
-                </div>
-                <div class="card-body">
-                    <form hx-post="/Activity/Create"
-                          hx-target="#timelineContainer"
-                          hx-swap="innerHTML"
-                          hx-indicator="#activityIndicator">
-                        <input type="hidden" name="ContactId" value="@Model.Company?.Id" />
-
-                        <div class="mb-3">
-                            <label for="activitySubject" class="form-label">Тема / Заголовок</label>
-                            <input type="text" class="form-control" id="activitySubject" name="Subject"
-                                   placeholder="Краткое описание" required />
-                        </div>
-                        <div class="mb-3">
-                            <label for="activityDescription" class="form-label">Подробности</label>
-                            <textarea class="form-control" id="activityDescription" name="Description" rows="2"
-                                      placeholder="Опишите звонок, встречу или задачу..."></textarea>
-                        </div>
-
-                        <div class="row g-2 align-items-end">
-                            <div class="col-md-6">
-                                <label for="activityType" class="form-label">Тип</label>
-                                <select class="form-select" id="activityType" name="Type">
-                                    <option value="Call">Звонок</option>
-                                    <option value="Email">Email</option>
-                                    <option value="Meeting">Встреча</option>
-                                    <option value="Task">Задача</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <button type="submit" class="btn btn-primary w-100">
-                                    <span class="htmx-indicator" id="activityIndicator">
-                                        <span class="spinner-border spinner-border-sm me-1"></span>
-                                    </span>
-                                    Сохранить
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
+            <div class="card-header">
+                <span class="fw-bold">Добавить активность</span>
             </div>
+            <div class="card-body">
+                @if (Model.Contacts == null || !Model.Contacts.Any())
+                {
+                    <div class="alert alert-warning">
+                        Сначала добавьте контактное лицо, чтобы создавать активности.
+                    </div>
+                }
+                else
+                {
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-body p-2">
+                                @if (Model.Contacts == null || !Model.Contacts.Any())
+                                {
+                                    <div class="text-muted p-2">Добавьте контакт, чтобы создавать активности</div>
+                                }
+                                else
+                                {
+                                    <form hx-post="/Activity/Create"
+                                          hx-target="#timelineContainer"
+                                          hx-swap="innerHTML"
+                                          hx-on::after-request="this.reset()"
+                                          hx-indicator="#activityIndicator">
+
+                                        <input type="hidden" name="CompanyId" value="@Model.Company?.Id" />
+                                        <input type="hidden" name="ContactId" value="@Model.Contacts.First().Id" />
+
+                                        <textarea class="form-control border-0 bg-light" rows="2" name="Description"
+                                                  placeholder="Напишите заметку, результат звонка или задачу..."></textarea>
+
+                                        <div class="d-flex justify-content-between align-items-center mt-2">
+
+                                            <div class="btn-group btn-group-sm" role="group" aria-label="Тип активности">
+                                                <input type="radio" class="btn-check" name="Type" id="type-call" value="Call" autocomplete="off" checked>
+                                                <label class="btn btn-outline-secondary" for="type-call" title="Звонок">
+                                                    <i class="bi bi-telephone-fill"></i>
+                                                </label>
+
+                                                <input type="radio" class="btn-check" name="Type" id="type-email" value="Email" autocomplete="off">
+                                                <label class="btn btn-outline-secondary" for="type-email" title="Email">
+                                                    <i class="bi bi-envelope-fill"></i>
+                                                </label>
+
+                                                <input type="radio" class="btn-check" name="Type" id="type-meeting" value="Meeting" autocomplete="off">
+                                                <label class="btn btn-outline-secondary" for="type-meeting" title="Встреча">
+                                                    <i class="bi bi-people-fill"></i>
+                                                </label>
+
+                                                <input type="radio" class="btn-check" name="Type" id="type-task" value="Task" autocomplete="off">
+                                                <label class="btn btn-outline-secondary" for="type-task" title="Задача">
+                                                    <i class="bi bi-check2-square"></i>
+                                                </label>
+                                            </div>
+
+                                            <button type="submit" class="btn btn-primary btn-sm">
+                                                <span class="htmx-indicator" id="activityIndicator">
+                                                    <span class="spinner-border spinner-border-sm me-1"></span>
+                                                </span>
+                                                <i class="bi bi-send"></i> Отправить
+                                            </button>
+                                        </div>
+                                    </form>
+                                }
+                            </div>
+                        </div>
+                }
+            </div>
+        </div>
 
             <div id="timelineContainer">
                 @await Html.PartialAsync("_TimelinePartial", activities)

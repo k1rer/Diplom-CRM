@@ -1,4 +1,5 @@
 ﻿using Diplom_CRM.Extensions;
+using Diplom_CRM.Models.DTO;
 using Diplom_CRM.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -21,18 +22,36 @@ public class ActivityController : Controller
         return PartialView("_PendingTasksPartial", tasks);
     }
 
-    // POST: Activity/CompleteTask?activityId=10
     [HttpPost]
-    public async Task<IActionResult> CompleteTask(int activityId)
+    public async Task<IActionResult> ToggleTask([FromForm] int activityId, [FromForm] int companyId)
     {
-        await _activityService.SetTaskAsCompletedAsync(activityId);
+        await _activityService.ToggleTaskCompletionAsync(activityId);
+        var activities = await _activityService.GetActivitiesByCompanyIdAsync(companyId);
+        return PartialView("~/Views/Company/_TimelinePartial.cshtml", activities);
+    }
 
-        if (Request.IsHtmxRequest())
+    [HttpDelete]
+    [HttpPost]
+    public async Task<IActionResult> Delete(int activityId, int companyId)
+    {
+        await _activityService.DeleteActivityAsync(activityId);
+        var activities = await _activityService.GetActivitiesByCompanyIdAsync(companyId);
+        return PartialView("~/Views/Company/_TimelinePartial.cshtml", activities);
+    }
+
+    // POST: Activity/Create
+    [HttpPost]
+    public async Task<IActionResult> Create(ActivityDTO dto)
+    {
+        if (!ModelState.IsValid)
         {
-            Response.Headers["HX-Trigger"] = "taskCompleted";
-            return new EmptyResult();
+            var currentActivities = await _activityService.GetActivitiesByCompanyIdAsync(dto.CompanyId);
+            return PartialView("~/Views/Company/_TimelinePartial.cshtml", currentActivities);
         }
 
-        return RedirectToAction("Index", "Home");
+        await _activityService.CreateActivityAsync(dto);
+
+        var activities = await _activityService.GetActivitiesByCompanyIdAsync(dto.CompanyId);
+        return PartialView("~/Views/Company/_TimelinePartial.cshtml", activities);
     }
 }

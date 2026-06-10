@@ -158,4 +158,48 @@ public class ClientService : IClientService
             .OrderByDescending(t => t.Date)
             .ToList();
     }
+    // === ФАЙЛ: Services/Implementations/ClientService.cs ===
+    public async Task<CompanyDTO?> GetCompanyByIdAsync(int companyId)
+    {
+        var company = await _db.Companies
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == companyId);
+
+        if (company == null) return null;
+
+        return new CompanyDTO
+        {
+            Id = company.Id,
+            Name = company.Name,
+            Industry = company.Industry,
+            Website = company.Website,
+            Phone = company.Phone,
+            Address = company.Address,
+            City = company.City,
+            Country = company.Country
+        };
+    }
+
+    public async Task<List<ContactDTO>> GetContactsByCompanyIdAsync(int companyId)
+    {
+        // Поскольку связь Contact.Company – строка, ищем по названию компании
+        var company = await _db.Companies
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == companyId);
+
+        if (company == null) return new List<ContactDTO>();
+
+        return await _db.Contacts
+            .Where(c => c.Company == company.Name)
+            .Select(c => new ContactDTO
+            {
+                Id = c.Id,
+                FirstName = c.FirstName,
+                LastName = c.LastName,
+                Email = c.Email,
+                Phone = c.Phone,
+                Position = c.Position
+            })
+            .ToListAsync();
+    }
 }

@@ -1,0 +1,38 @@
+﻿@model List<Diplom_CRM.Models.DTO.ContactDTO>
+
+<ul class="list-group list-group-flush">
+    @if (Model.Any())
+    {
+        @foreach (var contact in Model)
+        {
+            <li class="list-group-item">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <strong>@contact.FirstName @contact.LastName</strong>
+                        <small class="text-muted d-block">@(contact.Position ?? "Без должности")</small>
+                    </div>
+                    <div class="text-end">
+                        @if (!string.IsNullOrWhiteSpace(contact.Phone))
+                        {
+                            <a href="tel:@contact.Phone" class="d-block text-decoration-none">
+                                <i class="bi bi-telephone"></i> @contact.Phone
+                            </a>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(contact.Email))
+                        {
+                            <a href="mailto:@contact.Email" class="small">
+                                <i class="bi bi-envelope"></i> @contact.Email
+                            </a>
+                        }
+                    </div>
+                </div>
+            </li>
+        }
+    }
+    else
+    {
+        <li class="list-group-item text-muted">
+            <i class="bi bi-person-plus"></i> Нет добавленных контактов
+        </li>
+    }
+</ul>

@@ -6,6 +6,7 @@
     <title>@ViewData["Title"] – Diplom CRM</title>
     <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="~/css/site.css" rel="stylesheet" asp-append-version="true" />
+    <link href="~/lib/bootstrap-icons/font/bootstrap-icons.min.css" rel="stylesheet" />
     <style>
             body {
                 min-height: 100vh;
@@ -86,3 +87,32 @@
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
+<script>
+    // Преобразование UTC-дат в локальное время
+    function formatLocalTime(utcString) {
+    const date = new Date(utcString);
+    if (isNaN(date.getTime())) return utcString;
+    return date.toLocaleString('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+    });
+    }
+
+    function updateLocalTimes() {
+    document.querySelectorAll('.local-time').forEach(el => {
+    const utc = el.getAttribute('data-utc');
+    if (utc) {
+    el.textContent = formatLocalTime(utc);
+    }
+    });
+    }
+
+    // Обновить при загрузке страницы
+    document.addEventListener('DOMContentLoaded', updateLocalTimes);
+
+    // И после каждого htmx-запроса (для обновлённого таймлайна)
+    document.body.addEventListener('htmx:afterSwap', updateLocalTimes);
+</script>

@@ -11,5 +11,7 @@ namespace Diplom_CRM.Models.DTO
         public DateTime ScheduledDate { get; set; }
         public int ContactId { get; set; }
         public int? DealId { get; set; }
+        public int CompanyId { get; set; }
+        public bool IsCompleted { get; set; }
     }
 }
