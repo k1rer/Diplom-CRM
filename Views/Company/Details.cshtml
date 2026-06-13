@@ -11,6 +11,7 @@
     <h2 class="mb-4">@company?.Name</h2>
 
     <div class="row">
+        <!-- Левая колонка: информация о компании и контакты -->
         <div class="col-md-4">
             <div class="card mb-4">
                 <div class="card-body">
@@ -32,7 +33,17 @@
                         </dd>
 
                         <dt class="col-sm-5">Телефон</dt>
-                        <dd class="col-sm-7">@(company?.Phone ?? "—")</dd>
+                        <dd class="col-sm-7">
+                            @if (!string.IsNullOrWhiteSpace(company?.Phone))
+                            {
+                                <i class="bi bi-telephone-fill me-1"></i>
+                                @company.Phone
+                            }
+                            else
+                            {
+                                <span>—</span>
+                            }
+                        </dd>
 
                         <dt class="col-sm-5">Адрес</dt>
                         <dd class="col-sm-7">@(company?.Address ?? "—")</dd>
@@ -46,122 +57,123 @@
                 </div>
             </div>
 
-            <div class="card" id="contactsListContainer">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span class="fw-bold">Контакты компании</span>
-                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addContactModal">
-                        + Добавить
+            @await Html.PartialAsync("_ContactListPartial", contacts)
+        </div>
+
+        <!-- Правая колонка: форма активности и таймлайн -->
+        <div class="col-md-8">
+            <!-- Сворачиваемая форма добавления активности -->
+            <div class="card mb-4">
+                <div class="card-header p-2">
+                    <button class="btn btn-link text-decoration-none p-0 collapsed"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#collapseNewActivity"
+                            aria-expanded="false"
+                            aria-controls="collapseNewActivity">
+                        <i class="bi bi-plus-circle me-1"></i> Новая активность
                     </button>
                 </div>
-                <div class="card-body p-0">
-                    <ul class="list-group list-group-flush">
-                        @foreach (var contact in contacts)
+                <div class="collapse" id="collapseNewActivity">
+                    <div class="card-body p-2">
+                        @if (contacts == null || !contacts.Any())
                         {
-                            <li class="list-group-item">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div>
-                                        <strong>@contact.FirstName @contact.LastName</strong>
-                                        <small class="text-muted d-block">@(contact.Position ?? "Без должности")</small>
-                                    </div>
-                                    <div class="text-end">
-                                        <a href="tel:@contact.Phone" class="d-block text-decoration-none">@contact.Phone</a>
-                                        @if (!string.IsNullOrWhiteSpace(contact.Email))
+                            <div class="alert alert-warning mb-0">
+                                Сначала добавьте контактное лицо, чтобы создавать активности.
+                            </div>
+                        }
+                        else
+                        {
+                            <form hx-post="/Activity/Create"
+                                  hx-target="#timelineContainer"
+                                  hx-swap="innerHTML"
+                                  hx-on::after-request="this.reset()"
+                                  hx-indicator="#activityIndicator">
+
+                                <input type="hidden" name="CompanyId" value="@(company?.Id ?? 0)" />
+
+                                <div class="mb-2">
+                                    <label for="activityContact" class="form-label small">Контакт</label>
+                                    <select class="form-select form-select-sm" id="activityContact" name="ContactId" required>
+                                        @foreach (var contact in contacts)
                                         {
-                                            <a href="mailto:@contact.Email" class="small">@contact.Email</a>
+                                            <option value="@contact.Id">@contact.FirstName @contact.LastName</option>
                                         }
+                                    </select>
+                                </div>
+
+                                <div class="mb-2">
+                                    <label for="activitySubject" class="form-label small">Тема *</label>
+                                    <input type="text" class="form-control form-control-sm" id="activitySubject" name="Subject"
+                                           maxlength="200" required placeholder="Краткое описание" />
+                                </div>
+
+                                <div class="mb-2">
+                                    <label for="activityScheduledDate" class="form-label small scheduled-label">Дата и время</label>
+                                    <input type="datetime-local" class="form-control form-control-sm" id="activityScheduledDate" name="ScheduledDate"
+                                           value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" />
+                                </div>
+
+                                <!-- Блок, показываемый только для задач -->
+                                <div id="taskCompletionBlock" style="display:none;">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="taskIsCompleted" name="IsCompleted" value="true" />
+                                        <label class="form-check-label small" for="taskIsCompleted">Задача уже выполнена</label>
+                                    </div>
+                                    <div class="mb-2" id="completedDateGroup" style="display:none;">
+                                        <label for="activityCompletedDate" class="form-label small">Дата завершения</label>
+                                        <input type="datetime-local" class="form-control form-control-sm" id="activityCompletedDate" name="CompletedDate"
+                                               value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" />
                                     </div>
                                 </div>
-                            </li>
+
+                                <textarea class="form-control form-control-sm border-0 bg-light mb-2" rows="2" name="Description"
+                                          placeholder="Подробности (необязательно)"></textarea>
+
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="btn-group btn-group-sm" role="group" aria-label="Тип активности">
+                                        <input type="radio" class="btn-check" name="Type" id="type-call" value="Call" autocomplete="off" checked>
+                                        <label class="btn btn-outline-secondary" for="type-call" title="Звонок">
+                                            <i class="bi bi-telephone-fill"></i>
+                                        </label>
+                                        <input type="radio" class="btn-check" name="Type" id="type-email" value="Email" autocomplete="off">
+                                        <label class="btn btn-outline-secondary" for="type-email" title="Email">
+                                            <i class="bi bi-envelope-fill"></i>
+                                        </label>
+                                        <input type="radio" class="btn-check" name="Type" id="type-meeting" value="Meeting" autocomplete="off">
+                                        <label class="btn btn-outline-secondary" for="type-meeting" title="Встреча">
+                                            <i class="bi bi-people-fill"></i>
+                                        </label>
+                                        <input type="radio" class="btn-check" name="Type" id="type-task" value="Task" autocomplete="off">
+                                        <label class="btn btn-outline-secondary" for="type-task" title="Задача">
+                                            <i class="bi bi-check2-square"></i>
+                                        </label>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-sm">
+                                        <span class="htmx-indicator" id="activityIndicator">
+                                            <span class="spinner-border spinner-border-sm me-1"></span>
+                                        </span>
+                                        <i class="bi bi-send"></i> Отправить
+                                    </button>
+                                </div>
+                            </form>
                         }
-                        @if (!contacts.Any())
-                        {
-                            <li class="list-group-item text-muted">Нет добавленных контактов</li>
-                        }
-                    </ul>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="col-md-8">
-            <div class="card mb-4">
-            <div class="card-header">
-                <span class="fw-bold">Добавить активность</span>
-            </div>
-            <div class="card-body">
-                @if (Model.Contacts == null || !Model.Contacts.Any())
-                {
-                    <div class="alert alert-warning">
-                        Сначала добавьте контактное лицо, чтобы создавать активности.
-                    </div>
-                }
-                else
-                {
-                        <div class="card shadow-sm mb-4">
-                            <div class="card-body p-2">
-                                @if (Model.Contacts == null || !Model.Contacts.Any())
-                                {
-                                    <div class="text-muted p-2">Добавьте контакт, чтобы создавать активности</div>
-                                }
-                                else
-                                {
-                                    <form hx-post="/Activity/Create"
-                                          hx-target="#timelineContainer"
-                                          hx-swap="innerHTML"
-                                          hx-on::after-request="this.reset()"
-                                          hx-indicator="#activityIndicator">
-
-                                        <input type="hidden" name="CompanyId" value="@Model.Company?.Id" />
-                                        <input type="hidden" name="ContactId" value="@Model.Contacts.First().Id" />
-
-                                        <textarea class="form-control border-0 bg-light" rows="2" name="Description"
-                                                  placeholder="Напишите заметку, результат звонка или задачу..."></textarea>
-
-                                        <div class="d-flex justify-content-between align-items-center mt-2">
-
-                                            <div class="btn-group btn-group-sm" role="group" aria-label="Тип активности">
-                                                <input type="radio" class="btn-check" name="Type" id="type-call" value="Call" autocomplete="off" checked>
-                                                <label class="btn btn-outline-secondary" for="type-call" title="Звонок">
-                                                    <i class="bi bi-telephone-fill"></i>
-                                                </label>
-
-                                                <input type="radio" class="btn-check" name="Type" id="type-email" value="Email" autocomplete="off">
-                                                <label class="btn btn-outline-secondary" for="type-email" title="Email">
-                                                    <i class="bi bi-envelope-fill"></i>
-                                                </label>
-
-                                                <input type="radio" class="btn-check" name="Type" id="type-meeting" value="Meeting" autocomplete="off">
-                                                <label class="btn btn-outline-secondary" for="type-meeting" title="Встреча">
-                                                    <i class="bi bi-people-fill"></i>
-                                                </label>
-
-                                                <input type="radio" class="btn-check" name="Type" id="type-task" value="Task" autocomplete="off">
-                                                <label class="btn btn-outline-secondary" for="type-task" title="Задача">
-                                                    <i class="bi bi-check2-square"></i>
-                                                </label>
-                                            </div>
-
-                                            <button type="submit" class="btn btn-primary btn-sm">
-                                                <span class="htmx-indicator" id="activityIndicator">
-                                                    <span class="spinner-border spinner-border-sm me-1"></span>
-                                                </span>
-                                                <i class="bi bi-send"></i> Отправить
-                                            </button>
-                                        </div>
-                                    </form>
-                                }
-                            </div>
-                        </div>
-                }
-            </div>
-        </div>
-
-            <div id="timelineContainer">
+            <!-- Таймлайн -->
+            <div id="timelineContainer"
+                 hx-get="/Company/GetTimeline?companyId=@(company?.Id ?? 0)"
+                 hx-trigger="refreshTimeline from:body"
+                 hx-swap="innerHTML">
                 @await Html.PartialAsync("_TimelinePartial", activities)
             </div>
         </div>
     </div>
 </div>
 
+<!-- Модальное окно добавления контакта -->
 <div class="modal fade" id="addContactModal" tabindex="-1" aria-labelledby="addContactModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -169,10 +181,8 @@
                 <h5 class="modal-title" id="addContactModalLabel">Новый контакт</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
             </div>
-            <form hx-post="/Company/AddContact"
-                  hx-target="#contactsListContainer"
-                  hx-swap="innerHTML">
-                <input type="hidden" name="companyId" value="@Model.Company?.Id" />
+            <form hx-post="/Company/AddContact" hx-target="#contactsListContainer" hx-swap="innerHTML">
+                <input type="hidden" name="companyId" value="@(company?.Id ?? 0)" />
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">Имя *</label>
@@ -202,3 +212,75 @@
         </div>
     </div>
 </div>
+
+<!-- Модальное окно редактирования контакта -->
+<div class="modal fade" id="editContactModal" tabindex="-1" aria-labelledby="editContactModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editContactModalLabel">Редактировать контакт</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body" id="editContactModalBody">
+                <!-- Форма загружается через htmx -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно подтверждения удаления контакта -->
+<div class="modal fade" id="deleteContactModal" tabindex="-1" aria-labelledby="deleteContactModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteContactModalLabel">Подтверждение удаления</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body" id="deleteContactModalBody">
+                <!-- Содержимое загрузится через htmx -->
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Закрытие модалки редактирования
+        document.body.addEventListener('closeEditModal', function() {
+            var modal = bootstrap.Modal.getInstance(document.getElementById('editContactModal'));
+            if (modal) modal.hide();
+        });
+
+        // Динамическое переключение полей при выборе типа активности
+        document.querySelectorAll('input[name="Type"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const isTask = this.value === 'Task';
+                const scheduledLabel = document.querySelector('.scheduled-label');
+                const scheduledInput = document.getElementById('activityScheduledDate');
+                const taskBlock = document.getElementById('taskCompletionBlock');
+                const completedCheckbox = document.getElementById('taskIsCompleted');
+                const completedDateGroup = document.getElementById('completedDateGroup');
+
+                if (isTask) {
+                    scheduledLabel.textContent = 'Срок выполнения задачи';
+                    scheduledInput.required = true;
+                    taskBlock.style.display = '';
+                } else {
+                    scheduledLabel.textContent = 'Дата и время';
+                    scheduledInput.required = false;
+                    taskBlock.style.display = 'none';
+                    completedCheckbox.checked = false;
+                    completedDateGroup.style.display = 'none';
+                }
+            });
+        });
+
+        // Показать/скрыть дату завершения при отметке чекбокса
+        const taskIsCompleted = document.getElementById('taskIsCompleted');
+        if (taskIsCompleted) {
+            taskIsCompleted.addEventListener('change', function() {
+                document.getElementById('completedDateGroup').style.display = this.checked ? '' : 'none';
+            });
+        }
+    </script>
+}

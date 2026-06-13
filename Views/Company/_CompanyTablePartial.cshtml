@@ -42,7 +42,8 @@
             {
                 <li class="page-item">
                     <a class="page-link"
-                       hx-get="@Url.Action("Index", "Company", new { page = Model.Companies.Page - 1, searchTerm = Model.SearchTerm })"
+                       hx-get="@Url.Action("Index", "Company", new { page = Model.Companies.Page - 1, 
+                                                                            searchTerm = Model.SearchTerm })"
                        hx-target="#companyTableContainer"
                        hx-push-url="true">
                         &laquo; Назад
@@ -75,7 +76,8 @@
             {
                 <li class="page-item">
                     <a class="page-link"
-                       hx-get="@Url.Action("Index", "Company", new { page = Model.Companies.Page + 1, searchTerm = Model.SearchTerm })"
+                       hx-get="@Url.Action("Index", "Company", new { page = Model.Companies.Page + 1, 
+                                                                     searchTerm = Model.SearchTerm })"
                        hx-target="#companyTableContainer"
                        hx-push-url="true">
                         Вперёд &raquo;

@@ -1,0 +1,32 @@
+﻿@model Diplom_CRM.Models.DTO.ContactDTO
+
+<form hx-post="/Company/EditContact"
+      hx-target="#contactsListContainer"
+      hx-swap="outerHTML">
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="CompanyId" />
+
+    <div class="mb-3">
+        <label asp-for="FirstName" class="form-label">Имя *</label>
+        <input asp-for="FirstName" class="form-control" required />
+    </div>
+    <div class="mb-3">
+        <label asp-for="LastName" class="form-label">Фамилия</label>
+        <input asp-for="LastName" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label asp-for="Position" class="form-label">Должность</label>
+        <input asp-for="Position" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label asp-for="Phone" class="form-label">Телефон</label>
+        <input asp-for="Phone" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label asp-for="Email" class="form-label">Email</label>
+        <input asp-for="Email" class="form-control" />
+    </div>
+    <div class="text-end">
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+    </div>
+</form>

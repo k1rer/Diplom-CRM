@@ -1,5 +1,15 @@
-﻿@* === ФАЙЛ: Views/Company/_TimelinePartial.cshtml === *@
-@model IEnumerable<Diplom_CRM.Models.DTO.ActivityDTO>
+﻿@model IEnumerable<Diplom_CRM.Models.DTO.ActivityDTO>
+
+@{
+    string GetRussianTypeName(string type) => type switch
+    {
+        "Call" => "Звонок",
+        "Email" => "Email",
+        "Meeting" => "Встреча",
+        "Task" => "Задача",
+        _ => type
+    };
+}
 
 @if (Model == null || !Model.Any())
 {
@@ -12,9 +22,9 @@ else
         {
             var isTask = activity.Type == Diplom_CRM.Data.Enums.TypeEnum.Task;
             var completed = activity.IsCompleted;
+            var typeName = GetRussianTypeName(activity.Type.ToString());
 
             <div class="mb-4 position-relative">
-                <!-- Кружок с иконкой типа -->
                 <span class="position-absolute start-0 translate-middle bg-white border rounded-circle p-1"
                       style="left: -26px !important; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
                     @switch (activity.Type.ToString())
@@ -23,29 +33,24 @@ else
                             <i class="bi bi-telephone-fill text-primary"></i>
                             break;
                         case "Email":
-
                             <i class="bi bi-envelope-fill text-info"></i>
                             break;
                         case "Meeting":
-
                             <i class="bi bi-people-fill text-success"></i>
                             break;
                         case "Task":
-
                             <i class="bi bi-check2-square @(completed ? "text-success" : "text-warning")"></i>
                             break;
                         default:
-
                             <i class="bi bi-circle text-secondary"></i>
                             break;
                     }
                 </span>
 
-                <!-- Карточка активности -->
                 <div class="card shadow-sm border-0 @(completed ? "bg-success bg-opacity-10 border-success" : "bg-light")">
                     <div class="card-body p-3">
                         <div class="d-flex justify-content-between text-muted small mb-1">
-                            <strong>@activity.Type</strong>
+                            <strong>@typeName</strong>
                             <span class="local-time" data-utc="@activity.ScheduledDate.ToString("o")">
                                 @activity.ScheduledDate.ToString("g")
                             </span>
@@ -62,6 +67,16 @@ else
                             <p class="mb-1 @(completed ? "text-decoration-line-through" : "")">
                                 @activity.Description
                             </p>
+                        }
+
+                        @if (isTask && completed && activity.CompletedDate.HasValue)
+                        {
+                            <div class="small text-muted mt-1">
+                                <i class="bi bi-check-circle me-1"></i> Завершено:
+                                <span class="local-time" data-utc="@activity.CompletedDate.Value.ToUniversalTime().ToString("o")">
+                                    @activity.CompletedDate.Value.ToLocalTime().ToString("g")
+                                </span>
+                            </div>
                         }
 
                         @if (isTask)
@@ -90,7 +105,6 @@ else
                             </div>
                         }
 
-                        <!-- Кнопка удаления (общая) -->
                         <div class="text-end mt-1">
                             <button class="btn btn-sm btn-outline-danger"
                                     hx-delete="/Activity/Delete?activityId=@activity.Id&companyId=@activity.CompanyId"

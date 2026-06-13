@@ -1,0 +1,27 @@
+﻿@model Diplom_CRM.Models.View.DeleteContactConfirmationViewModel
+@{
+    var contact = Model.Contact;
+}
+<div>
+    @if (Model.HasActivities)
+    {
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            У контакта <strong>@contact.FirstName @contact.LastName</strong> есть активности.
+            При удалении все связанные активности также будут удалены безвозвратно.
+            Вы уверены?
+        </div>
+    }
+    else
+    {
+        <p>Вы действительно хотите удалить контакт <strong>@contact.FirstName @contact.LastName</strong>?</p>
+    }
+    <form hx-post="/Company/DeleteContact/@contact.Id"
+          hx-vals='{"companyId": @contact.CompanyId}'
+          hx-target="#contactsListContainer"
+          hx-swap="outerHTML"
+          hx-on::after-request="bootstrap.Modal.getInstance(document.getElementById('deleteContactModal')).hide()">
+        <button type="submit" class="btn btn-danger">Удалить</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+    </form>
+</div>

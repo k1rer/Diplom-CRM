@@ -16,34 +16,38 @@ public class ClientService : IClientService
     }
 
     public async Task<PagedResultDTO<CompanyListItemDTO>> GetPagedCompaniesAsync(
-        int page, int pageSize, string? searchTerm)
+    int page, int pageSize, string? searchTerm)
     {
-        var query = _db.Companies.AsNoTracking();
+        var baseQuery = _db.Companies.AsNoTracking();
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
             var term = searchTerm.Trim().ToLower();
-            query = query.Where(c =>
+            baseQuery = baseQuery.Where(c =>
                 c.Name.ToLower().Contains(term) ||
                 (c.Phone != null && c.Phone.Contains(term)));
         }
 
-        var totalCount = await query.CountAsync();
+        var totalCount = await baseQuery.CountAsync();
 
-        var items = await query
+        var items = await baseQuery
             .OrderByDescending(c => c.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(c => new CompanyListItemDTO
-            {
-                Id = c.Id,
-                Name = c.Name,
-                Industry = c.Industry,
-                City = c.City,
-                Country = c.Country,
-                ContactsCount = c.Contacts.Count,
-                CreatedAt = c.CreatedAt
-            })
+            .GroupJoin(_db.Contacts,
+                company => company.Name,
+                contact => contact.Company,
+                (company, contacts) => new CompanyListItemDTO
+                {
+                    Id = company.Id,
+                    Name = company.Name,
+                    Industry = company.Industry,
+                    Phone = company.Phone,
+                    City = company.City,
+                    Country = company.Country,
+                    ContactsCount = contacts.Count(),
+                    CreatedAt = company.CreatedAt
+                })
             .ToListAsync();
 
         return new PagedResultDTO<CompanyListItemDTO>
@@ -158,7 +162,7 @@ public class ClientService : IClientService
             .OrderByDescending(t => t.Date)
             .ToList();
     }
-    // === ФАЙЛ: Services/Implementations/ClientService.cs ===
+ 
     public async Task<CompanyDTO?> GetCompanyByIdAsync(int companyId)
     {
         var company = await _db.Companies
@@ -182,7 +186,6 @@ public class ClientService : IClientService
 
     public async Task<List<ContactDTO>> GetContactsByCompanyIdAsync(int companyId)
     {
-        // Поскольку связь Contact.Company – строка, ищем по названию компании
         var company = await _db.Companies
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Id == companyId);
@@ -198,8 +201,57 @@ public class ClientService : IClientService
                 LastName = c.LastName,
                 Email = c.Email,
                 Phone = c.Phone,
-                Position = c.Position
+                Position = c.Position,
+                CompanyId = companyId
             })
             .ToListAsync();
+    }
+    public async Task<ContactDTO?> GetContactByIdAsync(int contactId)
+    {
+        var contact = await _db.Contacts
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == contactId);
+        if (contact == null) return null;
+
+        var company = await _db.Companies
+            .FirstOrDefaultAsync(c => c.Name == contact.Company);
+
+        return new ContactDTO
+        {
+            Id = contact.Id,
+            FirstName = contact.FirstName,
+            LastName = contact.LastName,
+            Email = contact.Email,
+            Phone = contact.Phone,
+            Position = contact.Position,
+            CompanyId = company?.Id ?? 0
+        };
+    }
+
+    public async Task UpdateContactAsync(ContactDTO dto)
+    {
+        var contact = await _db.Contacts.FindAsync(dto.Id)
+            ?? throw new KeyNotFoundException($"Контакт с Id={dto.Id} не найден.");
+
+        contact.FirstName = dto.FirstName;
+        contact.LastName = dto.LastName;
+        contact.Phone = dto.Phone;
+        contact.Email = dto.Email;
+        contact.Position = dto.Position;
+
+        await _db.SaveChangesAsync();
+    }
+
+    public async Task DeleteContactAsync(int contactId)
+    {
+        var contact = await _db.Contacts.FindAsync(contactId)
+            ?? throw new KeyNotFoundException($"Контакт с Id={contactId} не найден.");
+        _db.Contacts.Remove(contact);
+        await _db.SaveChangesAsync();
+    }
+
+    public async Task<bool> ContactHasActivitiesAsync(int contactId)
+    {
+        return await _db.Activities.AnyAsync(a => a.ContactId == contactId);
     }
 }

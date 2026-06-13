@@ -1,5 +1,4 @@
-﻿// === ФАЙЛ: Controllers/DealController.cs ===
-using Diplom_CRM.Data;
+﻿using Diplom_CRM.Data;
 using Diplom_CRM.Extensions;
 using Diplom_CRM.Models.DTO;
 using Diplom_CRM.Models.View;

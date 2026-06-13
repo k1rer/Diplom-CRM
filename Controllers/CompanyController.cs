@@ -1,10 +1,8 @@
-﻿using Diplom_CRM.Data.Enums;
-using Diplom_CRM.Exceptions;
+﻿using Diplom_CRM.Exceptions;
 using Diplom_CRM.Extensions;
 using Diplom_CRM.Models.DTO;
 using Diplom_CRM.Models.View;
 using Diplom_CRM.Services;
-using Diplom_CRM.Services.Implementations;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Diplom_CRM.Controllers;
@@ -73,7 +71,7 @@ public class CompanyController : Controller
         return updatedTable;
     }
 
-    // GET: Company/Details/id
+    // GET: Company/Details/{id}
     [HttpGet("Company/Details/{id:int}")]
     public async Task<IActionResult> Details(int id)
     {
@@ -114,6 +112,25 @@ public class CompanyController : Controller
         return PartialView("_ContactListPartial", contacts);
     }
 
+    // DELETE/POST: Company/DeleteContact/{id}
+    [HttpDelete]
+    [HttpPost]
+    public async Task<IActionResult> DeleteContact(int id, [FromForm] int companyId)
+    {
+        bool hasActivities = await _clientService.ContactHasActivitiesAsync(id);
+
+        await _clientService.DeleteContactAsync(id);
+
+        var contacts = await _clientService.GetContactsByCompanyIdAsync(companyId);
+
+        if (hasActivities)
+        {
+            Response.Headers["HX-Trigger"] = "{\"refreshTimeline\": \"\"}";
+        }
+
+        return PartialView("_ContactListPartial", contacts);
+    }
+
     private async Task<PartialViewResult> GetCompanyTablePartialView()
     {
         const int pageSize = 10;
@@ -125,5 +142,58 @@ public class CompanyController : Controller
             CurrentPage = 1
         };
         return PartialView("_CompanyTablePartial", viewModel);
+    }
+
+    // GET: Company/EditContact/{id}
+    [HttpGet("Company/EditContact/{id:int}")]
+    public async Task<IActionResult> EditContact(int id)
+    {
+        var contactDto = await _clientService.GetContactByIdAsync(id);
+        if (contactDto == null)
+            return NotFound();
+
+        return PartialView("_EditContactPartial", contactDto);
+    }
+
+    // POST: Company/EditContact
+    [HttpPost]
+    public async Task<IActionResult> EditContact(ContactDTO dto)
+    {
+        if (!ModelState.IsValid)
+        {
+            Response.Headers["HX-Retarget"] = "#editContactModal .modal-body";
+            return PartialView("_EditContactPartial", dto);
+        }
+
+        await _clientService.UpdateContactAsync(dto);
+
+        Response.Headers["HX-Trigger"] = "closeEditModal";
+
+        var contacts = await _clientService.GetContactsByCompanyIdAsync(dto.CompanyId);
+        return PartialView("_ContactListPartial", contacts);
+    }
+
+    // GET: Company/CheckContactBeforeDelete/{id}
+    [HttpGet("Company/CheckContactBeforeDelete/{id:int}")]
+    public async Task<IActionResult> CheckContactBeforeDelete(int id)
+    {
+        var contactDto = await _clientService.GetContactByIdAsync(id);
+        if (contactDto == null) return NotFound();
+
+        var hasActivities = await _clientService.ContactHasActivitiesAsync(id);
+        var viewModel = new DeleteContactConfirmationViewModel
+        {
+            Contact = contactDto,
+            HasActivities = hasActivities
+        };
+        return PartialView("_DeleteContactConfirmationPartial", viewModel);
+    }
+
+    // GET: Company/GetTimeline?companyId=...
+    [HttpGet]
+    public async Task<IActionResult> GetTimeline(int companyId)
+    {
+        var activities = await _activityService.GetActivitiesByCompanyIdAsync(companyId);
+        return PartialView("_TimelinePartial", activities);
     }
 }

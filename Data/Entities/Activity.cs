@@ -26,7 +26,6 @@ namespace Diplom_CRM.Data.Entities
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-
         public int ContactId { get; set; }
 
         public int? DealId { get; set; }

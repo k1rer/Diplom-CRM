@@ -1,5 +1,4 @@
-﻿using Diplom_CRM.Extensions;
-using Diplom_CRM.Models.DTO;
+﻿using Diplom_CRM.Models.DTO;
 using Diplom_CRM.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,6 +21,7 @@ public class ActivityController : Controller
         return PartialView("_PendingTasksPartial", tasks);
     }
 
+    // POST: Activity/ToggleTask
     [HttpPost]
     public async Task<IActionResult> ToggleTask([FromForm] int activityId, [FromForm] int companyId)
     {
@@ -30,6 +30,7 @@ public class ActivityController : Controller
         return PartialView("~/Views/Company/_TimelinePartial.cshtml", activities);
     }
 
+    // POST/DELETE: Activity/Delete
     [HttpDelete]
     [HttpPost]
     public async Task<IActionResult> Delete(int activityId, int companyId)

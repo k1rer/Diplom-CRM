@@ -1,38 +1,68 @@
 ﻿@model List<Diplom_CRM.Models.DTO.ContactDTO>
 
-<ul class="list-group list-group-flush">
-    @if (Model.Any())
-    {
-        @foreach (var contact in Model)
-        {
-            <li class="list-group-item">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <strong>@contact.FirstName @contact.LastName</strong>
-                        <small class="text-muted d-block">@(contact.Position ?? "Без должности")</small>
-                    </div>
-                    <div class="text-end">
-                        @if (!string.IsNullOrWhiteSpace(contact.Phone))
-                        {
-                            <a href="tel:@contact.Phone" class="d-block text-decoration-none">
-                                <i class="bi bi-telephone"></i> @contact.Phone
-                            </a>
-                        }
-                        @if (!string.IsNullOrWhiteSpace(contact.Email))
-                        {
-                            <a href="mailto:@contact.Email" class="small">
-                                <i class="bi bi-envelope"></i> @contact.Email
-                            </a>
-                        }
-                    </div>
-                </div>
-            </li>
-        }
-    }
-    else
-    {
-        <li class="list-group-item text-muted">
-            <i class="bi bi-person-plus"></i> Нет добавленных контактов
-        </li>
-    }
-</ul>
+<div class="card" id="contactsListContainer">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-bold">Контакты компании</span>
+        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addContactModal">
+            + Добавить
+        </button>
+    </div>
+    <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+            @if (Model.Any())
+            {
+                @foreach (var contact in Model)
+                {
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>@contact.FirstName @contact.LastName</strong>
+                                <small class="text-muted d-block">@(contact.Position ?? "Без должности")</small>
+                            </div>
+                            <div class="text-end">
+                                @if (!string.IsNullOrWhiteSpace(contact.Phone))
+                                {
+                                    <div class="d-flex align-items-center justify-content-end">
+                                        <i class="bi bi-telephone-fill me-1"></i>
+                                        <a href="tel:@contact.Phone" class="text-decoration-none">@contact.Phone</a>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(contact.Email))
+                                {
+                                    <div class="d-flex align-items-center justify-content-end">
+                                        <i class="bi bi-envelope-fill me-1"></i>
+                                        <a href="mailto:@contact.Email" class="text-decoration-none small">@contact.Email</a>
+                                    </div>
+                                }
+                                <div class="mt-1">
+                                    <button class="btn btn-sm btn-outline-primary"
+                                            hx-get="/Company/EditContact/@contact.Id"
+                                            hx-target="#editContactModalBody"
+                                            hx-swap="innerHTML"
+                                            hx-on::after-request="bootstrap.Modal.getOrCreateInstance(document.getElementById('editContactModal')).show()"
+                                            title="Редактировать">
+                                        <i class="bi bi-pencil-fill"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger"
+                                            hx-get="/Company/CheckContactBeforeDelete/@contact.Id"
+                                            hx-target="#deleteContactModalBody"
+                                            hx-swap="innerHTML"
+                                            hx-on::after-request="bootstrap.Modal.getOrCreateInstance(document.getElementById('deleteContactModal')).show()"
+                                            title="Удалить">
+                                        <i class="bi bi-trash-fill"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                }
+            }
+            else
+            {
+                <li class="list-group-item text-muted">
+                    <i class="bi bi-person-plus"></i> Нет добавленных контактов
+                </li>
+            }
+        </ul>
+    </div>
+</div>

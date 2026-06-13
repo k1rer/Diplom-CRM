@@ -10,5 +10,9 @@ namespace Diplom_CRM.Services
         Task<List<TimelineItemDTO>> GetCompanyTimelineAsync(int companyId);
         Task<CompanyDTO?> GetCompanyByIdAsync(int companyId);
         Task<List<ContactDTO>> GetContactsByCompanyIdAsync(int companyId);
+        Task DeleteContactAsync(int contactId);
+        Task<ContactDTO?> GetContactByIdAsync(int contactId);
+        Task UpdateContactAsync(ContactDTO dto);
+        Task<bool> ContactHasActivitiesAsync(int contactId);
     }
 }

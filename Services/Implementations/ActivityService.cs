@@ -27,6 +27,22 @@ public class ActivityService : IActivityService
                 throw new KeyNotFoundException($"Сделка с Id={dto.DealId} не найдена.");
         }
 
+        if (dto.ScheduledDate == default || dto.ScheduledDate == DateTime.MinValue)
+        {
+            dto.ScheduledDate = DateTime.UtcNow;
+        }
+        else
+        {
+            if (dto.ScheduledDate.Kind == DateTimeKind.Unspecified)
+            {
+                dto.ScheduledDate = DateTime.SpecifyKind(dto.ScheduledDate, DateTimeKind.Local).ToUniversalTime();
+            }
+            else if (dto.ScheduledDate.Kind == DateTimeKind.Local)
+            {
+                dto.ScheduledDate = dto.ScheduledDate.ToUniversalTime();
+            }
+        }
+
         var activity = new Activity
         {
             Type = dto.Type,
@@ -127,7 +143,8 @@ public class ActivityService : IActivityService
                 ContactId = a.ContactId,
                 DealId = a.DealId,
                 CompanyId = companyId,
-                IsCompleted = a.IsCompleted
+                IsCompleted = a.IsCompleted,
+                CompletedDate = a.CompletedDate
             })
             .ToListAsync();
     }
