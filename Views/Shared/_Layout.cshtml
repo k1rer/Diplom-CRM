@@ -5,39 +5,79 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] – Diplom CRM</title>
     <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link href="~/css/site.css" rel="stylesheet" asp-append-version="true" />
     <link href="~/lib/bootstrap-icons/font/bootstrap-icons.min.css" rel="stylesheet" />
     <style>
-            body {
-                min-height: 100vh;
-            }
-            .sidebar {
-                min-height: 100vh;
-                width: 250px;
-                position: fixed;
-                top: 0;
-                left: 0;
-                padding-top: 20px;
-                background-color: #212529;
-            }
-            .main-content {
-                margin-left: 250px;
-                padding: 20px;
-            }
-            .navbar-top {
-                margin-left: 250px;
-            }
+        :root {
+            --sidebar-collapsed-width: 70px;
+            --sidebar-expanded-width: 250px;
+        }
 
-            .htmx-indicator {
-                display: none;
-            }
-            .htmx-request .htmx-indicator,
-            .htmx-request.htmx-indicator {
-                display: inline-block;
-            }
+        body {
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: var(--sidebar-collapsed-width);
+            background-color: #212529;
+            padding-top: 20px;
+            overflow-x: hidden;
+            transition: width 0.3s ease;
+            z-index: 1030;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .main-content,
+        .navbar-top {
+            margin-left: var(--sidebar-collapsed-width);
+        }
+
+        .navbar-top {
+            position: sticky;
+            top: 0;
+            z-index: 1020;
+        }
+
+        .sidebar .nav-link {
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+            padding: 0.75rem 1rem;
+        }
+
+        .sidebar .link-text {
+            display: none;
+            margin-left: 10px;
+            opacity: 0;
+            transition: opacity 0.2s ease 0.1s;
+        }
+
+        /* Развёрнутое состояние только для самой панели */
+        .sidebar:hover {
+            width: var(--sidebar-expanded-width);
+        }
+
+        .sidebar:hover .link-text {
+            display: inline;
+            opacity: 1;
+        }
+
+        /* Индикатор htmx */
+        .htmx-indicator {
+            display: none;
+        }
+        .htmx-request .htmx-indicator,
+        .htmx-request.htmx-indicator {
+            display: inline-block;
+        }
     </style>
+    @RenderSection("Styles", required: false)
 </head>
 <body>
+    <!-- Верхняя панель -->
     <nav class="navbar navbar-light bg-light border-bottom navbar-top">
         <div class="container-fluid">
             <span class="navbar-brand mb-0 h1">CRM Панель</span>
@@ -48,35 +88,41 @@
         </div>
     </nav>
 
+    <!-- Боковое меню (сайдбар) -->
     <aside class="sidebar d-flex flex-column text-white">
-        <ul class="nav nav-pills flex-column mb-auto px-3">
+        <ul class="nav nav-pills flex-column mb-auto px-2">
             <li class="nav-item">
                 <a class="nav-link text-white @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "active bg-primary" : "")"
                    href="/Dashboard/Index">
-                    Дашборд
+                    <i class="bi bi-speedometer2 fs-5"></i>
+                    <span class="link-text">Дашборд</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link text-white @(ViewContext.RouteData.Values["controller"]?.ToString() == "Company" ? "active bg-primary" : "")"
                    href="/Company/Index">
-                    Клиенты
+                    <i class="bi bi-building fs-5"></i>
+                    <span class="link-text">Клиенты</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link text-white @(ViewContext.RouteData.Values["controller"]?.ToString() == "Deal" ? "active bg-primary" : "")"
                    href="/Deal/Index">
-                    Воронка сделок
+                    <i class="bi bi-kanban fs-5"></i>
+                    <span class="link-text">Воронка сделок</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link text-white @(ViewContext.RouteData.Values["controller"]?.ToString() == "Activity" ? "active bg-primary" : "")"
                    href="/Activity/Index">
-                    Задачи
+                    <i class="bi bi-list-check fs-5"></i>
+                    <span class="link-text">Задачи</span>
                 </a>
             </li>
         </ul>
     </aside>
 
+    <!-- Основной контент -->
     <main class="main-content">
         @RenderBody()
     </main>
@@ -85,34 +131,33 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/htmx.min.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
+
+    <!-- Глобальные скрипты -->
+    <script>
+        // Преобразование UTC-дат в локальное время
+        function formatLocalTime(utcString) {
+            const date = new Date(utcString);
+            if (isNaN(date.getTime())) return utcString;
+            return date.toLocaleString('ru-RU', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function updateLocalTimes() {
+            document.querySelectorAll('.local-time').forEach(el => {
+                const utc = el.getAttribute('data-utc');
+                if (utc) {
+                    el.textContent = formatLocalTime(utc);
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', updateLocalTimes);
+        document.body.addEventListener('htmx:afterSwap', updateLocalTimes);
+    </script>
 </body>
 </html>
-<script>
-    // Преобразование UTC-дат в локальное время
-    function formatLocalTime(utcString) {
-    const date = new Date(utcString);
-    if (isNaN(date.getTime())) return utcString;
-    return date.toLocaleString('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-    });
-    }
-
-    function updateLocalTimes() {
-    document.querySelectorAll('.local-time').forEach(el => {
-    const utc = el.getAttribute('data-utc');
-    if (utc) {
-    el.textContent = formatLocalTime(utc);
-    }
-    });
-    }
-
-    // Обновить при загрузке страницы
-    document.addEventListener('DOMContentLoaded', updateLocalTimes);
-
-    // И после каждого htmx-запроса (для обновлённого таймлайна)
-    document.body.addEventListener('htmx:afterSwap', updateLocalTimes);
-</script>

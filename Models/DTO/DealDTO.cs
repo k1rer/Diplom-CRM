@@ -7,5 +7,6 @@
         public DateTime ExpectedCloseDate { get; set; }
         public string? Description { get; set; }
         public int ContactId { get; set; }
+        public int CompanyId { get; set; }
     }
 }

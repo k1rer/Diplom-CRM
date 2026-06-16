@@ -1,0 +1,17 @@
+﻿@model Diplom_CRM.Models.DTO.DealKanbanDTO
+
+<div class="card shadow-sm mb-2" data-id="@Model.Id">
+    <div class="card-body p-2">
+        <h6 class="card-title mb-1">@Model.Name</h6>
+        @if (!string.IsNullOrWhiteSpace(Model.CompanyName))
+        {
+            <small class="text-muted d-block">@Model.CompanyName</small>
+        }
+        <div class="d-flex justify-content-between align-items-center mt-1">
+            <strong>@Model.Amount.ToString("C")</strong>
+            <span class="badge @(Model.ActivitiesCount > 0 ? "bg-primary" : "bg-secondary")">
+                <i class="bi bi-journal-check me-1"></i>@Model.ActivitiesCount
+            </span>
+        </div>
+    </div>
+</div>

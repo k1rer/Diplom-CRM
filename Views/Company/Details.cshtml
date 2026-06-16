@@ -15,7 +15,18 @@
         <div class="col-md-4">
             <div class="card mb-4">
                 <div class="card-body">
-                    <h5 class="card-title">@company?.Name</h5>
+                    <h5 class="card-title d-flex justify-content-between align-items-center">
+                        @company?.Name
+                        <!-- Кнопка "Открыть сделку" -->
+                        <button class="btn btn-outline-success btn-sm"
+                                hx-get="/Deal/Create?companyId=@(company?.Id ?? 0)"
+                                hx-target="#dealModalBody"
+                                hx-swap="innerHTML"
+                                data-bs-toggle="modal"
+                                data-bs-target="#dealModal">
+                            <i class="bi bi-briefcase-fill"></i> Открыть сделку
+                        </button>
+                    </h5>
                     <dl class="row mb-0">
                         <dt class="col-sm-5">Отрасль</dt>
                         <dd class="col-sm-7">@(company?.Industry ?? "—")</dd>
@@ -243,11 +254,32 @@
     </div>
 </div>
 
+<!-- Модальное окно создания сделки -->
+<div class="modal fade" id="dealModal" tabindex="-1" aria-labelledby="dealModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="dealModalLabel">Новая сделка</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body" id="dealModalBody">
+                <!-- Форма сделки загрузится через htmx -->
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
-        // Закрытие модалки редактирования
+        // Закрытие модалки редактирования контакта
         document.body.addEventListener('closeEditModal', function() {
             var modal = bootstrap.Modal.getInstance(document.getElementById('editContactModal'));
+            if (modal) modal.hide();
+        });
+
+        // Закрытие модалки создания сделки
+        document.body.addEventListener('closeDealModal', function() {
+            var modal = bootstrap.Modal.getInstance(document.getElementById('dealModal'));
             if (modal) modal.hide();
         });
 

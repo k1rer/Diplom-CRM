@@ -7,5 +7,6 @@ namespace Diplom_CRM.Services
         Task<DealKanbanDTO> CreateDealAsync(DealDTO dto);
         Task ChangeDealStageAsync(int dealId, string newStage);
         Task<Dictionary<string, List<DealKanbanDTO>>> GetKanbanBoardAsync();
+        Task<DealKanbanDTO> GetDealKanbanByIdAsync(int dealId);
     }
 }

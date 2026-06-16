@@ -22,17 +22,41 @@ public class DealService : IDealService
         var contact = await _db.Contacts.FindAsync(dto.ContactId)
             ?? throw new KeyNotFoundException($"Контакт с Id={dto.ContactId} не найден.");
 
+        if (dto.ExpectedCloseDate.Kind == DateTimeKind.Unspecified)
+        {
+            dto.ExpectedCloseDate = DateTime.SpecifyKind(dto.ExpectedCloseDate, DateTimeKind.Local).ToUniversalTime();
+        }
+        else if (dto.ExpectedCloseDate.Kind == DateTimeKind.Local)
+        {
+            dto.ExpectedCloseDate = dto.ExpectedCloseDate.ToUniversalTime();
+        }
+
         var deal = new Deal
         {
             Name = dto.Name,
             Amount = dto.Amount,
             ExpectedCloseDate = dto.ExpectedCloseDate,
-            Description = dto.Description,
+            Status = StatusEnum.New,
             ContactId = dto.ContactId,
-            Status = StatusEnum.New
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
         };
 
         _db.Deals.Add(deal);
+        await _db.SaveChangesAsync();
+
+        var activity = new Activity
+        {
+            Type = TypeEnum.Task,
+            Subject = $"Создана сделка \"{deal.Name}\"",
+            Description = $"Сумма: {deal.Amount:C}, Статус: New",
+            ScheduledDate = DateTime.UtcNow,
+            IsCompleted = false,
+            CompletedDate = null, 
+            ContactId = deal.ContactId,
+            DealId = deal.Id
+        };
+        _db.Activities.Add(activity);
         await _db.SaveChangesAsync();
 
         return new DealKanbanDTO
@@ -78,6 +102,7 @@ public class DealService : IDealService
         var deals = await _db.Deals
             .AsNoTracking()
             .Include(d => d.Contact)
+            .Include(d => d.Activities)
             .ToListAsync();
 
         return deals
@@ -91,8 +116,32 @@ public class DealService : IDealService
                     Amount = d.Amount,
                     ContactName = $"{d.Contact.FirstName} {d.Contact.LastName}".Trim(),
                     CompanyName = d.Contact.Company,
-                    ExpectedCloseDate = d.ExpectedCloseDate
+                    ExpectedCloseDate = d.ExpectedCloseDate,
+                    ActivitiesCount = d.Activities.Count
                 }).ToList()
             );
+    }
+
+    public async Task<DealKanbanDTO> GetDealKanbanByIdAsync(int dealId)
+    {
+        var deal = await _db.Deals
+            .AsNoTracking()
+            .Include(d => d.Contact)
+            .Include(d => d.Activities)
+            .FirstOrDefaultAsync(d => d.Id == dealId);
+
+        if (deal == null)
+            throw new KeyNotFoundException($"Сделка с Id={dealId} не найдена.");
+
+        return new DealKanbanDTO
+        {
+            Id = deal.Id,
+            Name = deal.Name,
+            Amount = deal.Amount,
+            ContactName = $"{deal.Contact.FirstName} {deal.Contact.LastName}".Trim(),
+            CompanyName = deal.Contact.Company,
+            ExpectedCloseDate = deal.ExpectedCloseDate,
+            ActivitiesCount = deal.Activities.Count
+        };
     }
 }

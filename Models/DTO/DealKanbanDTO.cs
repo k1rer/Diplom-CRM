@@ -8,5 +8,6 @@
         public string ContactName { get; set; } = string.Empty;
         public string? CompanyName { get; set; }
         public DateTime ExpectedCloseDate { get; set; }
+        public int ActivitiesCount { get; set; }
     }
 }

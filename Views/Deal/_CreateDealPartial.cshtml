@@ -1,0 +1,44 @@
+﻿@model Diplom_CRM.Models.View.CreateDealViewModel
+
+@if (!Model.HasContacts)
+{
+    <div class="alert alert-warning">
+        У компании пока нет контактов. Сначала добавьте контактное лицо.
+    </div>
+}
+else
+{
+    <form hx-post="/Deal/Create"
+          hx-target="#dealModalBody"
+          hx-swap="innerHTML">
+        <input type="hidden" name="CompanyId" value="@Model.Deal.CompanyId" />
+
+        <div class="mb-3">
+            <label for="dealContact" class="form-label">Контакт *</label>
+            <select name="ContactId" id="dealContact" class="form-select" required>
+                @foreach (var contact in Model.Contacts)
+                {
+                    <option value="@contact.Id">@contact.FirstName @contact.LastName</option>
+                }
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="dealName" class="form-label">Название сделки *</label>
+            <input name="Name" id="dealName" class="form-control" required placeholder="Например, Поставка серверов" />
+        </div>
+
+        <div class="mb-3">
+            <label for="dealAmount" class="form-label">Сумма</label>
+            <input name="Amount" id="dealAmount" class="form-control" type="number" step="0.01" placeholder="0.00" />
+        </div>
+
+        <div class="mb-3">
+            <label for="dealExpectedClose" class="form-label">Ожидаемая дата закрытия</label>
+            <input name="ExpectedCloseDate" id="dealExpectedClose" class="form-control" type="date"
+                   value="@DateTime.Now.AddDays(14).ToString("yyyy-MM-dd")" />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Создать сделку</button>
+    </form>
+}

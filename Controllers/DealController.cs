@@ -1,22 +1,21 @@
 ﻿using Diplom_CRM.Data;
-using Diplom_CRM.Extensions;
 using Diplom_CRM.Models.DTO;
 using Diplom_CRM.Models.View;
 using Diplom_CRM.Services;
+using Diplom_CRM.Services.Implementations;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Diplom_CRM.Controllers;
 
 public class DealController : Controller
 {
     private readonly IDealService _dealService;
-    private readonly AppDbContext _db;
+    private readonly IClientService _clientService;
 
-    public DealController(IDealService dealService, AppDbContext db)
+    public DealController(IDealService dealService, IClientService clientService)
     {
         _dealService = dealService;
-        _db = db;
+        _clientService = clientService;
     }
 
     // GET: Deal/Index
@@ -24,45 +23,55 @@ public class DealController : Controller
     public async Task<IActionResult> Index()
     {
         var kanbanData = await _dealService.GetKanbanBoardAsync();
-
         var viewModel = new KanbanViewModel
         {
             Columns = kanbanData
         };
-
         return View(viewModel);
     }
 
-    // POST: Deal/ChangeStage?dealId=5&newStage=InProgress
+    // POST: Deal/UpdateStage
     [HttpPost]
-    public async Task<IActionResult> ChangeStage(int dealId, string newStage)
+    public async Task<IActionResult> UpdateStage([FromForm] int id, [FromForm] string newStage)
     {
         if (string.IsNullOrWhiteSpace(newStage))
             return BadRequest("Статус не указан.");
 
-        await _dealService.ChangeDealStageAsync(dealId, newStage);
+        await _dealService.ChangeDealStageAsync(id, newStage);
+        var updatedDeal = await _dealService.GetDealKanbanByIdAsync(id);
+        return PartialView("_DealCardPartial", updatedDeal);
+    }
 
-        var dealEntity = await _db.Deals
-            .AsNoTracking()
-            .Include(d => d.Contact)
-            .FirstOrDefaultAsync(d => d.Id == dealId);
+    [HttpGet]
+    public async Task<IActionResult> Create(int companyId)
+    {
+        var contacts = await _clientService.GetContactsByCompanyIdAsync(companyId);
 
-        if (dealEntity == null)
-            return NotFound();
-
-        var dealDto = new DealKanbanDTO
+        var viewModel = new CreateDealViewModel
         {
-            Id = dealEntity.Id,
-            Name = dealEntity.Name,
-            Amount = dealEntity.Amount,
-            ContactName = $"{dealEntity.Contact.FirstName} {dealEntity.Contact.LastName}".Trim(),
-            CompanyName = dealEntity.Contact.Company,
-            ExpectedCloseDate = dealEntity.ExpectedCloseDate
+            Deal = new DealDTO { CompanyId = companyId },
+            Contacts = contacts
         };
 
-        if (Request.IsHtmxRequest())
-            return PartialView("_DealCardPartial", dealDto);
-
-        return RedirectToAction(nameof(Index));
+        return PartialView("_CreateDealPartial", viewModel);
     }
+
+    [HttpPost]
+    public async Task<IActionResult> Create(DealDTO dto)
+    {
+        if (!ModelState.IsValid)
+        {
+            Response.Headers["HX-Retarget"] = "#dealModalBody";
+            var contacts = await _clientService.GetContactsByCompanyIdAsync(dto.CompanyId);
+            var viewModel = new CreateDealViewModel { Deal = dto, Contacts = contacts };
+            return PartialView("_CreateDealPartial", viewModel);
+        }
+
+        await _dealService.CreateDealAsync(dto);
+
+        Response.Headers["HX-Trigger"] = "closeDealModal, refreshTimeline";
+        return Ok();
+    }
+
+
 }

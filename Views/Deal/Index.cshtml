@@ -1,0 +1,69 @@
+﻿@model Diplom_CRM.Models.View.KanbanViewModel
+@{
+    ViewData["Title"] = "Воронка сделок";
+    var stageNames = new Dictionary<string, string>
+    {
+        ["New"] = "Новые",
+        ["InProgress"] = "В работе",
+        ["Won"] = "Выигранные",
+        ["Lost"] = "Проигранные"
+    };
+}
+
+<div class="container-fluid">
+    <h2 class="mb-4">Воронка сделок</h2>
+
+    <div class="row g-3">
+        @foreach (var stage in new[] { "New", "InProgress", "Won", "Lost" })
+        {
+            var deals = Model.Columns.ContainsKey(stage)
+                ? Model.Columns[stage]
+                : new List<Diplom_CRM.Models.DTO.DealKanbanDTO>();
+
+            <div class="col-12 col-md-6 col-lg-3">
+                <div class="card bg-light h-100">
+                    <div class="card-header fw-bold">
+                        @stageNames.GetValueOrDefault(stage, stage)
+                    </div>
+                    <div class="card-body p-2 kanban-drag-zone" data-stage="@stage">
+                        @foreach (var deal in deals)
+                        {
+                            @await Html.PartialAsync("_DealCardPartial", deal)
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/sortable.min.js"></script> 
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var zones = document.querySelectorAll('.kanban-drag-zone');
+            zones.forEach(function(zone) {
+                new Sortable(zone, {
+                    group: 'kanban',
+                    animation: 150,
+                    onEnd: function(evt) {
+                        var fromStage = evt.from.dataset.stage;
+                        var toStage = evt.to.dataset.stage;
+
+                        // Если статус не изменился – игнорируем
+                        if (fromStage === toStage) return;
+
+                        var dealId = evt.item.getAttribute('data-id');
+                        if (dealId && toStage) {
+                            htmx.ajax('POST', '/Deal/UpdateStage', {
+                                target: evt.item,
+                                swap: 'outerHTML',
+                                values: { id: dealId, newStage: toStage }
+                            });
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+}
