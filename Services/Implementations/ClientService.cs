@@ -2,6 +2,7 @@
 using Diplom_CRM.Data.Entities;
 using Diplom_CRM.Exceptions;
 using Diplom_CRM.Models.DTO;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace Diplom_CRM.Services.Implementations;
@@ -253,5 +254,12 @@ public class ClientService : IClientService
     public async Task<bool> ContactHasActivitiesAsync(int contactId)
     {
         return await _db.Activities.AnyAsync(a => a.ContactId == contactId);
+    }
+
+    public async Task<List<SelectListItem>> GetCompaniesSelectListAsync()
+    {
+        return await _db.Companies
+            .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name })
+            .ToListAsync();
     }
 }

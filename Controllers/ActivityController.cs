@@ -1,16 +1,57 @@
-﻿using Diplom_CRM.Models.DTO;
+﻿using Diplom_CRM.Extensions;
+using Diplom_CRM.Models.DTO;
+using Diplom_CRM.Models.View;
 using Diplom_CRM.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace Diplom_CRM.Controllers;
 
 public class ActivityController : Controller
 {
     private readonly IActivityService _activityService;
+    private readonly IClientService _clientService;
+    private readonly IDealService _dealService;
 
-    public ActivityController(IActivityService activityService)
+    public ActivityController(IActivityService activityService, 
+                              IClientService clientService, 
+                              IDealService dealService)
     {
         _activityService = activityService;
+        _clientService = clientService;
+        _dealService = dealService;
+    }
+
+    // GET: Activity/Index
+    [HttpGet]
+    public async Task<IActionResult> Index(
+        string? type, int? companyId, int? dealId, string? status, string? userId,
+        DateTime? fromDate, DateTime? toDate, string? search, string? sortBy)
+    {
+        var filter = new ActivityFilterViewModel
+        {
+            Type = type,
+            CompanyId = companyId,
+            DealId = dealId,
+            Status = status ?? "All",
+            UserId = userId,
+            FromDate = fromDate,
+            ToDate = toDate,
+            Search = search,
+            SortBy = sortBy ?? "date_desc"
+        };
+
+        var activities = await _activityService.GetFilteredActivitiesAsync(filter);
+
+        // Для выпадающих списков
+        ViewBag.Companies = await _clientService.GetCompaniesSelectListAsync();
+        ViewBag.Deals = await _dealService.GetDealsSelectListAsync();
+        ViewBag.Users = new List<SelectListItem>();
+
+        if (Request.IsHtmxRequest())
+            return PartialView("_ActivityListPartial", activities);
+
+        return View(activities);
     }
 
     // GET: Activity/GetPendingTasks
@@ -54,5 +95,16 @@ public class ActivityController : Controller
 
         var activities = await _activityService.GetActivitiesByCompanyIdAsync(dto.CompanyId);
         return PartialView("~/Views/Company/_TimelinePartial.cshtml", activities);
+    }
+
+    // POST: Activity/ToggleTaskCard?activityId=...
+    [HttpPost]
+    public async Task<IActionResult> ToggleTaskCard(int activityId)
+    {
+        await _activityService.ToggleTaskCompletionAsync(activityId);
+        var activity = await _activityService.GetActivityByIdAsync(activityId);
+        if (activity == null)
+            return NotFound();
+        return PartialView("_ActivityCardPartial", activity);
     }
 }

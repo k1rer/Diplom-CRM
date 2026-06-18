@@ -1,0 +1,13 @@
+﻿@model IEnumerable<Diplom_CRM.Models.DTO.ActivityDTO>
+
+@if (Model == null || !Model.Any())
+{
+    <div class="alert alert-info">Активности не найдены.</div>
+}
+else
+{
+    @foreach (var activity in Model)
+    {
+        @await Html.PartialAsync("_ActivityCardPartial", activity)
+    }
+}

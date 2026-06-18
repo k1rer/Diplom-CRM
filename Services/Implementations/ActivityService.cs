@@ -1,6 +1,7 @@
 ﻿using Diplom_CRM.Data;
 using Diplom_CRM.Data.Enums;
 using Diplom_CRM.Models.DTO;
+using Diplom_CRM.Models.View;
 using Microsoft.EntityFrameworkCore;
 using Activity = Diplom_CRM.Data.Entities.Activity;
 
@@ -157,5 +158,109 @@ public class ActivityService : IActivityService
             _db.Activities.Remove(activity);
             await _db.SaveChangesAsync();
         }
+    }
+    public async Task<List<ActivityDTO>> GetFilteredActivitiesAsync(ActivityFilterViewModel filter)
+    {
+        var query = _db.Activities
+            .AsNoTracking()
+            .Include(a => a.Contact)
+            .Include(a => a.Deal)
+            .AsQueryable();
+
+        // Фильтр по типу
+        if (!string.IsNullOrWhiteSpace(filter.Type) && Enum.TryParse<TypeEnum>(filter.Type, out var typeEnum))
+            query = query.Where(a => a.Type == typeEnum);
+
+        // Фильтр по компании (через строковое поле Contact.Company)
+        if (filter.CompanyId.HasValue)
+        {
+            var company = await _db.Companies.FindAsync(filter.CompanyId.Value);
+            if (company != null)
+                query = query.Where(a => a.Contact.Company == company.Name);
+        }
+
+        // Фильтр по сделке
+        if (filter.DealId.HasValue)
+            query = query.Where(a => a.DealId == filter.DealId.Value);
+
+        // Статус выполнения (для задач)
+        if (!string.IsNullOrWhiteSpace(filter.Status) && filter.Status != "All")
+        {
+            if (filter.Status == "Pending")
+                query = query.Where(a => !a.IsCompleted);
+            else if (filter.Status == "Completed")
+                query = query.Where(a => a.IsCompleted);
+        }
+
+        // Период
+        if (filter.FromDate.HasValue)
+            query = query.Where(a => a.ScheduledDate >= filter.FromDate.Value);
+        if (filter.ToDate.HasValue)
+            query = query.Where(a => a.ScheduledDate <= filter.ToDate.Value);
+
+        // Поиск по теме и описанию
+        if (!string.IsNullOrWhiteSpace(filter.Search))
+        {
+            var term = filter.Search.Trim().ToLower();
+            query = query.Where(a => a.Subject.ToLower().Contains(term) ||
+                                     (a.Description != null && a.Description.ToLower().Contains(term)));
+        }
+
+        // Сортировка
+        query = filter.SortBy switch
+        {
+            "date_asc" => query.OrderBy(a => a.ScheduledDate),
+            _ => query.OrderByDescending(a => a.ScheduledDate)
+        };
+
+        // Проекция в DTO (без асинхронных вызовов)
+        var activities = await query.Select(a => new ActivityDTO
+        {
+            Id = a.Id,
+            Type = a.Type,
+            Subject = a.Subject,
+            Description = a.Description,
+            ScheduledDate = a.ScheduledDate > DateTime.MinValue ? a.ScheduledDate : a.CreatedAt,
+            IsCompleted = a.IsCompleted,
+            ContactId = a.ContactId,
+            DealId = a.DealId,
+            // Подзапрос для CompanyId
+            CompanyId = _db.Companies
+                .Where(c => c.Name == a.Contact.Company)
+                .Select(c => c.Id)
+                .FirstOrDefault(),
+            ContactName = a.Contact.FirstName + " " + (a.Contact.LastName ?? ""),
+            CompanyName = a.Contact.Company,
+            DealName = a.Deal != null ? a.Deal.Name : null
+        }).ToListAsync();
+
+        return activities;
+    }
+    public async Task<ActivityDTO?> GetActivityByIdAsync(int activityId)
+    {
+        return await _db.Activities
+            .AsNoTracking()
+            .Include(a => a.Contact)
+            .Include(a => a.Deal)
+            .Where(a => a.Id == activityId)
+            .Select(a => new ActivityDTO
+            {
+                Id = a.Id,
+                Type = a.Type,
+                Subject = a.Subject,
+                Description = a.Description,
+                ScheduledDate = a.ScheduledDate > DateTime.MinValue ? a.ScheduledDate : a.CreatedAt,
+                IsCompleted = a.IsCompleted,
+                ContactId = a.ContactId,
+                DealId = a.DealId,
+                CompanyId = _db.Companies
+                    .Where(c => c.Name == a.Contact.Company)
+                    .Select(c => c.Id)
+                    .FirstOrDefault(),
+                ContactName = a.Contact.FirstName + " " + (a.Contact.LastName ?? ""),
+                CompanyName = a.Contact.Company,
+                DealName = a.Deal != null ? a.Deal.Name : null
+            })
+            .FirstOrDefaultAsync();
     }
 }

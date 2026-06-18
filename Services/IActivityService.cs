@@ -1,4 +1,5 @@
 ﻿using Diplom_CRM.Models.DTO;
+using Diplom_CRM.Models.View;
 
 namespace Diplom_CRM.Services
 {
@@ -9,5 +10,7 @@ namespace Diplom_CRM.Services
         Task<List<ActivityListItemDTO>> GetPendingTasksForUserAsync(string userId);
         Task<List<ActivityDTO>> GetActivitiesByCompanyIdAsync(int companyId);
         Task DeleteActivityAsync(int activityId);
+        Task<List<ActivityDTO>> GetFilteredActivitiesAsync(ActivityFilterViewModel filter);
+        Task<ActivityDTO?> GetActivityByIdAsync(int activityId);
     }
 }

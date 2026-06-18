@@ -3,6 +3,7 @@ using Diplom_CRM.Data.Entities;
 using Diplom_CRM.Data.Enums;
 using Diplom_CRM.Models.DTO;
 using Diplom_CRM.Services;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Activity = Diplom_CRM.Data.Entities.Activity;
 
@@ -143,5 +144,12 @@ public class DealService : IDealService
             ExpectedCloseDate = deal.ExpectedCloseDate,
             ActivitiesCount = deal.Activities.Count
         };
+    }
+
+    public async Task<List<SelectListItem>> GetDealsSelectListAsync()
+    {
+        return await _db.Deals
+            .Select(d => new SelectListItem { Value = d.Id.ToString(), Text = d.Name })
+            .ToListAsync();
     }
 }

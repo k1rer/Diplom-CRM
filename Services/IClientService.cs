@@ -1,4 +1,5 @@
 ﻿using Diplom_CRM.Models.DTO;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace Diplom_CRM.Services
 {
@@ -14,5 +15,6 @@ namespace Diplom_CRM.Services
         Task<ContactDTO?> GetContactByIdAsync(int contactId);
         Task UpdateContactAsync(ContactDTO dto);
         Task<bool> ContactHasActivitiesAsync(int contactId);
+        Task<List<SelectListItem>> GetCompaniesSelectListAsync();
     }
 }
