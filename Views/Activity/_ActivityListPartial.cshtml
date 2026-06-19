@@ -6,8 +6,12 @@
 }
 else
 {
-    @foreach (var activity in Model)
-    {
-        @await Html.PartialAsync("_ActivityCardPartial", activity)
-    }
+    <div class="row g-3" id="activityFeedRow">
+        @foreach (var activity in Model)
+        {
+            <div class="activity-card-wrapper col-12">
+                @await Html.PartialAsync("_ActivityCardPartial", activity)
+            </div>
+        }
+    </div>
 }

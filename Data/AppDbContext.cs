@@ -237,27 +237,26 @@ namespace Diplom_CRM.Data
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             var now = DateTime.UtcNow;
-
-            foreach (var entry in ChangeTracker.Entries<Contact>()
-                .Where(e => e.State == EntityState.Modified))
+            foreach (var entry in ChangeTracker.Entries<Activity>())
             {
-                entry.Entity.UpdatedAt = now;
-            }
-
-            foreach (var entry in ChangeTracker.Entries<Deal>()
-                .Where(e => e.State == EntityState.Modified))
-            {
-                entry.Entity.UpdatedAt = now;
-
-                var deal = entry.Entity;
-                // Если статус изменился на Won или Lost, и дата закрытия ещё не задана – ставим текущую
-                if ((deal.Status == StatusEnum.Won || deal.Status == StatusEnum.Lost)
-                    && deal.ActualCloseDate == null)
+                if (entry.State == EntityState.Added || entry.State == EntityState.Modified)
                 {
-                    deal.ActualCloseDate = now;
+                    var activity = entry.Entity;
+                    if (activity.ScheduledDate == default || activity.ScheduledDate == DateTime.MinValue)
+                        activity.ScheduledDate = now;
+                    else if (activity.ScheduledDate.Kind != DateTimeKind.Utc)
+                        activity.ScheduledDate = DateTime.SpecifyKind(activity.ScheduledDate, DateTimeKind.Utc);
+
+                    if (activity.CompletedDate.HasValue)
+                    {
+                        var cd = activity.CompletedDate.Value;
+                        if (cd == default || cd == DateTime.MinValue)
+                            activity.CompletedDate = null;
+                        else if (cd.Kind != DateTimeKind.Utc)
+                            activity.CompletedDate = DateTime.SpecifyKind(cd, DateTimeKind.Utc);
+                    }
                 }
             }
-
             return await base.SaveChangesAsync(cancellationToken);
         }
     }

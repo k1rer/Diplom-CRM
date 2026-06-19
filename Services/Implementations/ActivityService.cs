@@ -206,33 +206,70 @@ public class ActivityService : IActivityService
                                      (a.Description != null && a.Description.ToLower().Contains(term)));
         }
 
-        // Сортировка
+        if (filter.CompanyId.HasValue)
+        {
+            var company = await _db.Companies.FindAsync(filter.CompanyId.Value);
+            if (company != null)
+                query = query.Where(a => a.Contact.Company == company.Name);
+        }
+
+        if (filter.DealId.HasValue)
+            query = query.Where(a => a.DealId == filter.DealId.Value);
+
+        if (!string.IsNullOrWhiteSpace(filter.Status) && filter.Status != "All")
+        {
+            if (filter.Status == "Pending")
+                query = query.Where(a => !a.IsCompleted);
+            else if (filter.Status == "Completed")
+                query = query.Where(a => a.IsCompleted);
+        }
+
+        // Даты фильтрации уже в UTC и с правильным Kind
+        if (filter.FromDate.HasValue)
+            query = query.Where(a => a.ScheduledDate >= filter.FromDate.Value);
+        if (filter.ToDate.HasValue)
+            query = query.Where(a => a.ScheduledDate <= filter.ToDate.Value);
+
+        if (!string.IsNullOrWhiteSpace(filter.Search))
+        {
+            var term = filter.Search.Trim().ToLower();
+            query = query.Where(a => a.Subject.ToLower().Contains(term) ||
+                                     (a.Description != null && a.Description.ToLower().Contains(term)));
+        }
+
         query = filter.SortBy switch
         {
             "date_asc" => query.OrderBy(a => a.ScheduledDate),
             _ => query.OrderByDescending(a => a.ScheduledDate)
         };
 
-        // Проекция в DTO (без асинхронных вызовов)
+        // Проекция без проблем с DateTime, так как все параметры уже UTC
         var activities = await query.Select(a => new ActivityDTO
         {
             Id = a.Id,
             Type = a.Type,
             Subject = a.Subject,
             Description = a.Description,
-            ScheduledDate = a.ScheduledDate > DateTime.MinValue ? a.ScheduledDate : a.CreatedAt,
+            ScheduledDate = a.ScheduledDate,
             IsCompleted = a.IsCompleted,
             ContactId = a.ContactId,
             DealId = a.DealId,
-            // Подзапрос для CompanyId
-            CompanyId = _db.Companies
-                .Where(c => c.Name == a.Contact.Company)
-                .Select(c => c.Id)
-                .FirstOrDefault(),
             ContactName = a.Contact.FirstName + " " + (a.Contact.LastName ?? ""),
             CompanyName = a.Contact.Company,
             DealName = a.Deal != null ? a.Deal.Name : null
         }).ToListAsync();
+
+        // CompanyId получим отдельно (как раньше)
+        var companyNames = activities.Select(a => a.CompanyName).Where(n => n != null).Distinct().ToList();
+        if (companyNames.Any())
+        {
+            var companyDict = await _db.Companies
+                .Where(c => companyNames.Contains(c.Name))
+                .ToDictionaryAsync(c => c.Name!, c => c.Id);
+            foreach (var a in activities)
+                if (a.CompanyName != null && companyDict.ContainsKey(a.CompanyName))
+                    a.CompanyId = companyDict[a.CompanyName];
+        }
 
         return activities;
     }

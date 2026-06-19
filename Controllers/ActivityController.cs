@@ -28,6 +28,11 @@ public class ActivityController : Controller
         string? type, int? companyId, int? dealId, string? status, string? userId,
         DateTime? fromDate, DateTime? toDate, string? search, string? sortBy)
     {
+        if (fromDate.HasValue)
+            fromDate = DateTime.SpecifyKind(fromDate.Value, DateTimeKind.Utc);
+        if (toDate.HasValue)
+            toDate = DateTime.SpecifyKind(toDate.Value, DateTimeKind.Utc);
+
         var filter = new ActivityFilterViewModel
         {
             Type = type,

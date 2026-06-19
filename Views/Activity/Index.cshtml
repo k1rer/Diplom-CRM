@@ -1,85 +1,251 @@
-﻿@model IEnumerable<Diplom_CRM.Models.DTO.ActivityDTO>
+﻿@* === ФАЙЛ: Views/Activity/Index.cshtml (исправленный) === *@
+@model IEnumerable<Diplom_CRM.Models.DTO.ActivityDTO>
 @{
     ViewData["Title"] = "Активности";
 }
+
+<style>
+    .activity-card-wrapper {
+        transition: flex 0.4s ease-in-out, max-width 0.4s ease-in-out, transform 0.3s ease;
+    }
+
+    .view-grid {
+        flex: 0 0 50% !important;
+        max-width: 50% !important;
+    }
+
+    .view-list {
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+    }
+
+    .no-transition {
+        transition: none !important;
+    }
+</style>
+
 <div class="container-fluid">
     <h2 class="mb-4">Фильтр активностей</h2>
-    <div class="row">
-        <div class="col-md-3">
+
+    <!-- Вся форма фильтров обёрнута в карточку для визуального выделения -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
             <form id="advancedFilterForm"
                   hx-get="/Activity/Index"
                   hx-target="#activityListContainer"
-                  hx-trigger="change, input delay:300ms from:input[type='text']">
-                <div class="card shadow-sm mb-3">
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label">Поиск</label>
-                            <input type="text" name="search" class="form-control" placeholder="Тема или описание..." />
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Тип</label>
-                            <select name="type" class="form-select">
-                                <option value="">Все</option>
-                                <option value="Call">Звонки</option>
-                                <option value="Email">Письма</option>
-                                <option value="Meeting">Встречи</option>
-                                <option value="Task">Задачи</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Статус задачи</label>
-                            <select name="status" class="form-select">
-                                <option value="All">Все</option>
-                                <option value="Pending">В процессе</option>
-                                <option value="Completed">Завершено</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Клиент / Компания</label>
-                            <select name="companyId" class="form-select" asp-items="ViewBag.Companies">
-                                <option value="">Все</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Сделка</label>
-                            <select name="dealId" class="form-select" asp-items="ViewBag.Deals">
-                                <option value="">Все</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Менеджер</label>
-                            <select name="userId" class="form-select" asp-items="ViewBag.Users">
-                                <option value="">Все</option>
-                            </select>
-                        </div>
-                        <div class="row g-2">
-                            <div class="col-6">
-                                <label class="form-label">С даты</label>
-                                <input type="date" name="fromDate" class="form-control" />
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label">По дату</label>
-                                <input type="date" name="toDate" class="form-control" />
-                            </div>
-                        </div>
-                        <div class="mt-3">
-                            <label class="form-label">Сортировка</label>
-                            <select name="sortBy" class="form-select">
-                                <option value="date_desc">Сначала новые</option>
-                                <option value="date_asc">Сначала старые</option>
-                            </select>
-                        </div>
-                        <button type="reset" class="btn btn-outline-secondary mt-3 w-100">
-                            Сбросить
+                  hx-trigger="change, input delay:300ms from:input[type='text']"
+                  hx-indicator="#activitySpinner">
+
+                <!-- Основная панель фильтров -->
+                <div class="row g-3 align-items-end">
+                    <!-- Сортировка -->
+                    <div class="col-auto">
+                        <label class="form-label fw-semibold">Сортировка</label>
+                        <select name="sortBy" class="form-select">
+                            <option value="date_desc">Сначала новые</option>
+                            <option value="date_asc">Сначала старые</option>
+                        </select>
+                    </div>
+
+                    <!-- Поиск (занимает всё доступное пространство) -->
+                    <div class="col">
+                        <label class="form-label fw-semibold">Поиск</label>
+                        <input type="text" name="search" class="form-control"
+                               placeholder="Тема или описание..." />
+                    </div>
+
+                    <!-- Тип активности -->
+                    <div class="col-auto">
+                        <label class="form-label fw-semibold">Тип</label>
+                        <select name="type" class="form-select">
+                            <option value="">Все</option>
+                            <option value="Call">Звонки</option>
+                            <option value="Email">Письма</option>
+                            <option value="Meeting">Встречи</option>
+                            <option value="Task">Задачи</option>
+                        </select>
+                    </div>
+
+                    <!-- Статус задачи -->
+                    <div class="col-auto">
+                        <label class="form-label fw-semibold">Статус задачи</label>
+                        <select name="status" class="form-select">
+                            <option value="All">Все</option>
+                            <option value="Pending">В процессе</option>
+                            <option value="Completed">Завершено</option>
+                        </select>
+                    </div>
+
+                    <!-- Кнопка раскрытия дополнительных фильтров -->
+                    <div class="col-auto">
+                        <button class="btn btn-outline-primary" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#advancedFilters"
+                                aria-expanded="false" aria-controls="advancedFilters">
+                            <i class="bi bi-sliders"></i> Дополнительно
                         </button>
+                    </div>
+
+                    <!-- Индикатор загрузки -->
+                    <div class="col-auto">
+                        <div id="activitySpinner" class="htmx-indicator">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                <span class="visually-hidden">Загрузка...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Скрытая панель расширенных фильтров -->
+                <div class="collapse mt-3" id="advancedFilters">
+                    <div class="row g-3 align-items-end">
+                        <!-- Период: с даты -->
+                        <div class="col-auto">
+                            <label class="form-label fw-semibold">С даты</label>
+                            <input type="date" name="fromDate" class="form-control" />
+                        </div>
+                        <!-- Период: по дату -->
+                        <div class="col-auto">
+                            <label class="form-label fw-semibold">По дату</label>
+                            <input type="date" name="toDate" class="form-control" />
+                        </div>
+
+                        <!-- Компания -->
+                        <div class="col-auto">
+                            <label class="form-label fw-semibold">Компания</label>
+                            <select id="companySelect" name="companyId" class="form-select"
+                                    asp-items="ViewBag.Companies">
+                                <option value="">Все</option>
+                            </select>
+                        </div>
+
+                        <!-- Сделка (заблокирована по умолчанию) -->
+                        <div class="col-auto">
+                            <label class="form-label fw-semibold">Сделка</label>
+                            <select id="dealSelect" name="dealId" class="form-select"
+                                    asp-items="ViewBag.Deals" disabled>
+                                <option value="">Все</option>
+                            </select>
+                        </div>
+
+                        <!-- Менеджер (заблокирован по умолчанию) -->
+                        <div class="col-auto">
+                            <label class="form-label fw-semibold">Менеджер</label>
+                            <select id="userSelect" name="userId" class="form-select"
+                                    asp-items="ViewBag.Users" disabled>
+                                <option value="">Все</option>
+                            </select>
+                        </div>
+
+                        <!-- Кнопка сброса -->
+                        <div class="col-auto">
+                            <button type="button" id="resetFiltersBtn" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Сбросить всё
+                            </button>
+                        </div>
                     </div>
                 </div>
             </form>
         </div>
-        <div class="col-md-9">
-            <div id="activityListContainer">
-                @await Html.PartialAsync("_ActivityListPartial", Model)
-            </div>
+    </div>
+
+    <!-- Блок переключателя вида -->
+    <div class="d-flex justify-content-between align-items-center mt-3 mb-2">
+        <h5 class="mb-0">Результаты</h5>
+        <div class="btn-group btn-group-sm" role="group" aria-label="Вид отображения">
+            <button type="button" class="btn btn-outline-secondary btn-view-toggle active" data-view="list">
+                <i class="bi bi-view-list"></i>
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-view-toggle" data-view="grid">
+                <i class="bi bi-grid-3x3-gap"></i>
+            </button>
         </div>
     </div>
+
+    <!-- Контейнер результатов -->
+    <div id="activityListContainer">
+        @await Html.PartialAsync("_ActivityListPartial", Model)
+    </div>
 </div>
+
+@section Scripts {
+    <script>
+        // Управление блокировкой сделки и менеджера при выборе компании
+        document.getElementById('companySelect').addEventListener('change', function () {
+            var dealSelect = document.getElementById('dealSelect');
+            var userSelect = document.getElementById('userSelect');
+            var companySelected = this.value !== '';
+
+            dealSelect.disabled = !companySelected;
+            userSelect.disabled = !companySelected;
+
+            if (!companySelected) {
+                dealSelect.value = '';
+                userSelect.value = '';
+            }
+        });
+
+        // Переключатель вида списка/плитки с анимацией
+        (function() {
+            const STORAGE_KEY = 'activityViewMode';
+            const wrappersSelector = '.activity-card-wrapper';
+
+            function getSavedMode() {
+                return localStorage.getItem(STORAGE_KEY) || 'list';
+            }
+
+            function applyViewMode(mode, animate) {
+                const wrappers = document.querySelectorAll(wrappersSelector);
+                wrappers.forEach(w => {
+                    w.classList.remove('view-list', 'view-grid');
+                    if (mode === 'grid') {
+                        w.classList.add('view-grid');
+                    } else {
+                        w.classList.add('view-list');
+                    }
+
+                    if (!animate) {
+                        w.classList.add('no-transition');
+                        void w.offsetWidth;
+                        w.classList.remove('no-transition');
+                    }
+                });
+
+                document.querySelectorAll('.btn-view-toggle').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.view === mode);
+                });
+            }
+
+            applyViewMode(getSavedMode(), false);
+
+            document.querySelectorAll('.btn-view-toggle').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const mode = this.dataset.view;
+                    localStorage.setItem(STORAGE_KEY, mode);
+                    applyViewMode(mode, true);
+                });
+            });
+
+            document.body.addEventListener('htmx:afterSwap', function(evt) {
+                if (evt.detail.target && evt.detail.target.id === 'activityListContainer') {
+                    applyViewMode(getSavedMode(), false);
+                }
+            });
+        })();
+
+        // Сброс фильтров и обновление списка
+        document.getElementById('resetFiltersBtn').addEventListener('click', function(e) {
+            var form = document.getElementById('advancedFilterForm');
+            // Сбрасываем значения всех полей
+            form.reset();
+
+            // Даём DOM обновиться после сброса, затем отправляем запрос через htmx
+            requestAnimationFrame(() => {
+                htmx.ajax('GET', '/Activity/Index', {
+                    target: '#activityListContainer',
+                    swap: 'innerHTML',
+                    values: new FormData(form)
+                });
+            });
+        });
+    </script>
+}
