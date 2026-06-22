@@ -1,6 +1,7 @@
 ﻿using Diplom_CRM.Data;
 using Diplom_CRM.Data.Entities;
 using Diplom_CRM.Data.Enums;
+using Diplom_CRM.Extensions;
 using Diplom_CRM.Models.DTO;
 using Diplom_CRM.Services;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -80,13 +81,14 @@ public class DealService : IDealService
             ?? throw new KeyNotFoundException($"Сделка с Id={dealId} не найдена.");
 
         var oldStage = deal.Status;
-        deal.Status = stage;
+        var oldStageName = oldStage.GetDisplayName();
+        var newStageName = stage.GetDisplayName();
 
         var activity = new Activity
         {
             Type = TypeEnum.Task,
-            Subject = $"Статус сделки изменён на \"{stage}\"",
-            Description = $"Сделка \"{deal.Name}\": {oldStage} → {stage}",
+            Subject = $"Статус сделки изменён на \"{newStageName}\"",
+            Description = $"Сделка \"{deal.Name}\": {oldStageName} → {newStageName}",
             ScheduledDate = DateTime.UtcNow,
             IsCompleted = true,
             CompletedDate = DateTime.UtcNow,

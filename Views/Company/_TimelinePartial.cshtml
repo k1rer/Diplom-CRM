@@ -1,15 +1,5 @@
-﻿@model IEnumerable<Diplom_CRM.Models.DTO.ActivityDTO>
-
-@{
-    string GetRussianTypeName(string type) => type switch
-    {
-        "Call" => "Звонок",
-        "Email" => "Email",
-        "Meeting" => "Встреча",
-        "Task" => "Задача",
-        _ => type
-    };
-}
+﻿@using Diplom_CRM.Extensions
+@model IEnumerable<Diplom_CRM.Models.DTO.ActivityDTO>
 
 @if (Model == null || !Model.Any())
 {
@@ -22,7 +12,7 @@ else
         {
             var isTask = activity.Type == Diplom_CRM.Data.Enums.TypeEnum.Task;
             var completed = activity.IsCompleted;
-            var typeName = GetRussianTypeName(activity.Type.ToString());
+            var typeName = activity.Type.GetDisplayName();
 
             <div class="mb-4 position-relative">
                 <span class="position-absolute start-0 translate-middle bg-white border rounded-circle p-1"
