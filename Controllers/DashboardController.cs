@@ -17,15 +17,7 @@ public class DashboardController : Controller
     [HttpGet]
     public async Task<IActionResult> Index()
     {
-        var metrics = await _analyticsService.GetDashboardMetricsAsync();
-        var funnel = await _analyticsService.GetSalesFunnelDataAsync();
-
-        var viewModel = new DashboardViewModel
-        {
-            Metrics = metrics,
-            Funnel = funnel
-        };
-
+        var viewModel = await _analyticsService.GetDashboardViewModelAsync();
         return View(viewModel);
     }
 }

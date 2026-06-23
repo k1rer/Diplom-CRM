@@ -4,7 +4,7 @@
   "libraries": [
     {
       "library": "htmx@2.0.7",
-      "destination": "wwwroot/js/",
+      "destination": "wwwroot/lib/htmx/",
       "files": [
         "htmx.min.js"
       ]
@@ -21,9 +21,17 @@
     {
       "provider": "jsdelivr",
       "library": "sortablejs@1.15.7",
-      "destination": "wwwroot/js/",
+      "destination": "wwwroot/lib/Sortable/",
       "files": [
         "Sortable.min.js"
+      ]
+    },
+    {
+      "provider": "jsdelivr",
+      "library": "chart.js@4.5.1",
+      "destination": "wwwroot/lib/chart/",
+      "files": [
+        "dist/chart.min.js"
       ]
     }
   ]

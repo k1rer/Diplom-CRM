@@ -1,4 +1,5 @@
 ﻿using Diplom_CRM.Models.DTO;
+using Diplom_CRM.Models.View;
 
 namespace Diplom_CRM.Services
 {
@@ -6,5 +7,6 @@ namespace Diplom_CRM.Services
     {
         Task<DashboardMetricsDTO> GetDashboardMetricsAsync();
         Task<List<SalesFunnelItemDTO>> GetSalesFunnelDataAsync();
+        Task<DashboardViewModel> GetDashboardViewModelAsync();
     }
 }

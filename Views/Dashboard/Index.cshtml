@@ -1,0 +1,159 @@
+﻿@model Diplom_CRM.Models.View.DashboardViewModel
+@{
+    ViewData["Title"] = "Дашборд";
+    var stageNames = new Dictionary<string, string>
+    {
+        ["New"] = "Новые",
+        ["InProgress"] = "В работе",
+        ["Won"] = "Выигранные",
+        ["Lost"] = "Проигранные"
+    };
+}
+
+<div class="container-fluid">
+    <h2 class="mb-4">Панель управления</h2>
+
+    <!-- Метрики -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm border-primary">
+                <div class="card-body d-flex align-items-center">
+                    <i class="bi bi-building fs-2 text-primary me-3"></i>
+                    <div>
+                        <h6 class="card-subtitle text-muted">Активные клиенты</h6>
+                        <h3 class="card-title mb-0">@Model.ActiveClientsCount</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-success">
+                <div class="card-body d-flex align-items-center">
+                    <i class="bi bi-wallet2 fs-2 text-success me-3"></i>
+                    <div>
+                        <h6 class="card-subtitle text-muted">Объем воронки</h6>
+                        <h3 class="card-title mb-0">@Model.TotalPipelineAmount.ToString("C")</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-info">
+                <div class="card-body d-flex align-items-center">
+                    <i class="bi bi-graph-up fs-2 text-info me-3"></i>
+                    <div>
+                        <h6 class="card-subtitle text-muted">Конверсия (Win Rate)</h6>
+                        <h3 class="card-title mb-0">@Model.WinRate%</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-warning">
+                <div class="card-body d-flex align-items-center">
+                    <i class="bi bi-list-check fs-2 text-warning me-3"></i>
+                    <div>
+                        <h6 class="card-subtitle text-muted">Задачи в работе</h6>
+                        <h3 class="card-title mb-0">@Model.PendingTasksCount</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- График и таблица -->
+    <div class="row">
+        <!-- График -->
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header fw-bold">
+                    <i class="bi bi-bar-chart-fill me-2"></i>Воронка продаж
+                </div>
+                <div class="card-body">
+                    <canvas id="funnelChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Топ-5 сделок -->
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header fw-bold">
+                    <i class="bi bi-trophy me-2"></i>Топ-5 крупнейших сделок
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Название</th>
+                                <th>Компания</th>
+                                <th>Сумма</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var deal in Model.TopDeals)
+                            {
+                                <tr>
+                                    <td>@deal.Name</td>
+                                    <td>@deal.CompanyName</td>
+                                    <td>@deal.Amount.ToString("C")</td>
+                                    <td>
+                                        <a href="/Deal/Details/@deal.Id" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/chart/dist/chart.min.js"></script>
+    <script>
+        const ctx = document.getElementById('funnelChart').getContext('2d');
+        const stageData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+            new[] { "New", "InProgress", "Won", "Lost" }
+                .Select(s => Model.StageCounts.ContainsKey(s) ? Model.StageCounts[s] : 0)
+        ));
+        const stageLabels = ['Новые', 'В работе', 'Выигранные', 'Проигранные'];
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: stageLabels,
+                datasets: [{
+                    label: 'Количество сделок',
+                    data: stageData,
+                    backgroundColor: [
+                        'rgba(13, 110, 253, 0.7)',
+                        'rgba(255, 193, 7, 0.7)',
+                        'rgba(25, 135, 84, 0.7)',
+                        'rgba(220, 53, 69, 0.7)'
+                    ],
+                    borderColor: [
+                        '#0d6efd', '#ffc107', '#198754', '#dc3545'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 }
+                    }
+                }
+            }
+        });
+    </script>
+}
