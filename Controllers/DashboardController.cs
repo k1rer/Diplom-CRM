@@ -1,5 +1,4 @@
-﻿using Diplom_CRM.Models.View;
-using Diplom_CRM.Services;
+﻿using Diplom_CRM.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Diplom_CRM.Controllers;

@@ -1,4 +1,5 @@
 ﻿using Diplom_CRM.Data.Enums;
+using Diplom_CRM.Models;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -27,8 +28,12 @@ namespace Diplom_CRM.Data.Entities
         public string? Description { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+        public string? AppUserId { get; set; }
+
+        public AppUser? AppUser { get; set; }
 
         public int ContactId { get; set; }
 

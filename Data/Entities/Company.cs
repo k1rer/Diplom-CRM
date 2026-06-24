@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Diplom_CRM.Models;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Diplom_CRM.Data.Entities
@@ -29,6 +30,10 @@ namespace Diplom_CRM.Data.Entities
 
         [MaxLength(100)]
         public string? Country { get; set; }
+
+        public string? AppUserId { get; set; }
+
+        public AppUser? AppUser { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

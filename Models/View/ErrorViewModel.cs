@@ -1,4 +1,4 @@
-namespace Diplom_CRM.Models
+namespace Diplom_CRM.Models.View
 {
     public class ErrorViewModel
     {

@@ -5,19 +5,19 @@ using Activity = Diplom_CRM.Data.Entities.Activity;
 
 namespace Diplom_CRM.Data
 {
-    public class AppDbContext : DbContext
+    public class ApplicationDbContext : DbContext
     {
         public DbSet<Contact> Contacts { get; set; }
         public DbSet<Company> Companies { get; set; }
         public DbSet<Deal> Deals { get; set; }
         public DbSet<Activity> Activities { get; set; }
 
-        public AppDbContext(DbContextOptions<AppDbContext> options)
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
         }
 
-        public AppDbContext() { }
+        public ApplicationDbContext() { }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -27,6 +27,7 @@ namespace Diplom_CRM.Data
             ConfigureCompany(modelBuilder);
             ConfigureDeal(modelBuilder);
             ConfigureActivity(modelBuilder);
+            ConfigureIdentity(modelBuilder);
         }
 
         private void ConfigureContact(ModelBuilder modelBuilder)
@@ -231,6 +232,21 @@ namespace Diplom_CRM.Data
             entity.HasOne(a => a.Deal)
                 .WithMany(d => d.Activities)
                 .HasForeignKey(a => a.DealId)
+                .OnDelete(DeleteBehavior.SetNull);
+        }
+
+        private void ConfigureIdentity(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Company>()
+                .HasOne(c => c.AppUser)
+                .WithMany(u => u.Companies)
+                .HasForeignKey(c => c.AppUserId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Deal>()
+                .HasOne(d => d.AppUser)
+                .WithMany(u => u.Deals)
+                .HasForeignKey(d => d.AppUserId)
                 .OnDelete(DeleteBehavior.SetNull);
         }
 

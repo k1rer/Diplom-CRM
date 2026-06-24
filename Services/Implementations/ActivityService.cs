@@ -9,9 +9,9 @@ namespace Diplom_CRM.Services.Implementations;
 
 public class ActivityService : IActivityService
 {
-    private readonly AppDbContext _db;
+    private readonly ApplicationDbContext _db;
 
-    public ActivityService(AppDbContext db)
+    public ActivityService(ApplicationDbContext db)
     {
         _db = db;
     }

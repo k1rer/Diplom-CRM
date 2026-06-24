@@ -1,4 +1,4 @@
-using Diplom_CRM.Models;
+using Diplom_CRM.Models.View;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 

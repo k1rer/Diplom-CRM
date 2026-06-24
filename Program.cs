@@ -1,7 +1,9 @@
 using Diplom_CRM.Data;
+using Diplom_CRM.Models;
 using Diplom_CRM.Services;
 using Diplom_CRM.Services.Implementations;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 
 namespace Diplom_CRM
 {
@@ -15,8 +17,18 @@ namespace Diplom_CRM
             if (string.IsNullOrWhiteSpace(connectionString))
                 throw new MissingFieldException("Failed to get Default connection string");
 
-            builder.Services.AddDbContext<AppDbContext>(options =>
+            builder.Services.AddDbContext<ApplicationDbContext>(options =>
             options.UseNpgsql(connectionString));
+
+            builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
+            {
+                options.Password.RequireDigit = false;
+                options.Password.RequiredLength = 4;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireUppercase = false;
+            })
+            .AddEntityFrameworkStores<ApplicationDbContext>()
+            .AddDefaultTokenProviders();
 
             builder.Services.AddControllersWithViews();
 
@@ -35,6 +47,8 @@ namespace Diplom_CRM
 
             app.UseHttpsRedirection();
             app.UseRouting();
+
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapStaticAssets();

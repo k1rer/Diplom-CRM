@@ -6,9 +6,9 @@ using System.Reflection;
 
 namespace Diplom_CRM.Data
 {
-    public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
+    public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<ApplicationDbContext>
     {
-        public AppDbContext CreateDbContext(string[] args)
+        public ApplicationDbContext CreateDbContext(string[] args)
         {
             var assemblyLocation = Assembly.GetExecutingAssembly().Location;
             var projectDirectory = Path.GetDirectoryName(assemblyLocation)
@@ -39,10 +39,10 @@ namespace Diplom_CRM.Data
             var connectionString = configuration.GetConnectionString("Default")
                 ?? throw new InvalidOperationException("Строка подключения 'Default' не найдена в конфигурации.");
 
-            var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
+            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
             optionsBuilder.UseNpgsql(connectionString);
 
-            return new AppDbContext(optionsBuilder.Options);
+            return new ApplicationDbContext(optionsBuilder.Options);
         }
     }
 }

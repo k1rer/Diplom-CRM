@@ -8,9 +8,9 @@ namespace Diplom_CRM.Services.Implementations;
 
 public class AnalyticsService : IAnalyticsService
 {
-    private readonly AppDbContext _db;
+    private readonly ApplicationDbContext _db;
 
-    public AnalyticsService(AppDbContext db)
+    public AnalyticsService(ApplicationDbContext db)
     {
         _db = db;
     }
