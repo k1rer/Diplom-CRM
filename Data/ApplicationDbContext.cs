@@ -1,11 +1,14 @@
 ﻿using Diplom_CRM.Data.Entities;
 using Diplom_CRM.Data.Enums;
+using Diplom_CRM.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Activity = Diplom_CRM.Data.Entities.Activity;
 
 namespace Diplom_CRM.Data
 {
-    public class ApplicationDbContext : DbContext
+    public class ApplicationDbContext : IdentityDbContext<AppUser, IdentityRole, string>
     {
         public DbSet<Contact> Contacts { get; set; }
         public DbSet<Company> Companies { get; set; }
