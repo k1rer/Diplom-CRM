@@ -1,4 +1,12 @@
 ﻿@using Microsoft.AspNetCore.Identity
+@using Diplom_CRM.Models
+@inject UserManager<AppUser> UserManager
+@{
+    var currentUser = await UserManager.GetUserAsync(User);
+    var displayName = currentUser != null
+        ? $"{currentUser.FirstName} {currentUser.LastName}"
+        : User?.Identity?.Name ?? "Гость";
+}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -79,13 +87,6 @@
 </head>
 <body>
     <!-- Верхняя панель -->
-    @inject UserManager<AppUser> UserManager
-    @{
-        var currentUser = await UserManager.GetUserAsync(User);
-        var displayName = currentUser != null
-            ? $"{currentUser.FirstName} {currentUser.LastName}"
-            : User?.Identity?.Name ?? "Гость";
-    }
     <nav class="navbar navbar-light bg-light border-bottom navbar-top">
         <div class="container-fluid">
             <span class="navbar-brand mb-0 h1">CRM Панель</span>

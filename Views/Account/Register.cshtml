@@ -1,52 +1,86 @@
 ﻿@model Diplom_CRM.Models.View.RegisterViewModel
 @{
+    Layout = null;
     ViewData["Title"] = "Регистрация";
-    Layout = "~/Views/Shared/_Layout.cshtml";
 }
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] – CRM</title>
+    <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/lib/bootstrap-icons/font/bootstrap-icons.min.css" rel="stylesheet" />
+    <style>
+            body {
+                background-color: #f5f7fa;
+            }
 
-<div class="container">
-    <div class="row vh-100 justify-content-center align-items-center">
-        <div class="col-md-6 col-lg-4">
-            <div class="card shadow-lg">
-                <div class="card-header bg-success text-white">
-                    <h5 class="card-title mb-0">Регистрация нового пользователя</h5>
-                </div>
-                <div class="card-body p-4">
-                    <form method="post" asp-action="Register">
-                        <div asp-validation-summary="ModelOnly" class="text-danger small"></div>
-
-                        <div class="mb-3">
-                            <label asp-for="FirstName" class="form-label"></label>
+            .register-card {
+                max-width: 450px;
+                width: 100%;
+            }
+    </style>
+</head>
+<body class="d-flex align-items-center justify-content-center vh-100">
+    <div class="register-card">
+        <div class="card shadow-lg">
+            <div class="card-header bg-success text-white text-center">
+                <h4 class="mb-0">CRM Панель</h4>
+            </div>
+            <div class="card-body p-4">
+                <h5 class="card-title mb-4">Регистрация нового пользователя</h5>
+                <form method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger small"></div>
+                    <div class="mb-3">
+                        <label asp-for="FirstName" class="form-label"></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-person"></i></span>
                             <input asp-for="FirstName" class="form-control" placeholder="Иван" />
-                            <span asp-validation-for="FirstName" class="text-danger small"></span>
                         </div>
-                        <div class="mb-3">
-                            <label asp-for="LastName" class="form-label"></label>
-                            <input asp-for="LastName" class="form-control" placeholder="Иванов" />
-                            <span asp-validation-for="LastName" class="text-danger small"></span>
-                        </div>
-                        <div class="mb-3">
-                            <label asp-for="Email" class="form-label"></label>
-                            <input asp-for="Email" class="form-control" placeholder="name@example.com" />
-                            <span asp-validation-for="Email" class="text-danger small"></span>
-                        </div>
-                        <div class="mb-3">
-                            <label asp-for="Password" class="form-label"></label>
-                            <input asp-for="Password" class="form-control" placeholder="Пароль" />
-                            <span asp-validation-for="Password" class="text-danger small"></span>
-                        </div>
-                        <div class="mb-3">
-                            <label asp-for="ConfirmPassword" class="form-label"></label>
-                            <input asp-for="ConfirmPassword" class="form-control" placeholder="Повторите пароль" />
-                            <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
-                        </div>
-                        <button type="submit" class="btn btn-success w-100">Зарегистрироваться</button>
-                    </form>
-                    <div class="mt-3 text-center">
-                        Уже есть аккаунт? <a asp-action="Login">Войти</a>
+                        <span asp-validation-for="FirstName" class="text-danger small"></span>
                     </div>
-                </div>
+                    <div class="mb-3">
+                        <label asp-for="LastName" class="form-label"></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-person"></i></span>
+                            <input asp-for="LastName" class="form-control" placeholder="Иванов" />
+                        </div>
+                        <span asp-validation-for="LastName" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label"></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                            <input asp-for="Email" class="form-control" placeholder="name@example.com" />
+                        </div>
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label"></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                            <input asp-for="Password" class="form-control" placeholder="Пароль" />
+                        </div>
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="ConfirmPassword" class="form-label"></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                            <input asp-for="ConfirmPassword" class="form-control" placeholder="Повторите пароль" />
+                        </div>
+                        <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Зарегистрироваться</button>
+                </form>
+            </div>
+            <div class="card-footer text-center">
+                <span>Уже есть аккаунт?</span> <a asp-action="Login" class="text-decoration-none">Войти</a>
             </div>
         </div>
     </div>
-</div>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

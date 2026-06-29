@@ -26,5 +26,7 @@ namespace Diplom_CRM.Models.View
         [Display(Name = "Подтверждение пароля")]
         [Compare("Password", ErrorMessage = "Пароли не совпадают")]
         public string ConfirmPassword { get; set; } = string.Empty;
+
+        public bool AllowRegistration { get; set; } = true;
     }
 }

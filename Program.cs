@@ -2,8 +2,9 @@ using Diplom_CRM.Data;
 using Diplom_CRM.Models;
 using Diplom_CRM.Services;
 using Diplom_CRM.Services.Implementations;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace Diplom_CRM
 {
@@ -18,7 +19,7 @@ namespace Diplom_CRM
                 throw new MissingFieldException("Failed to get Default connection string");
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseNpgsql(connectionString));
+                options.UseNpgsql(connectionString));
 
             builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
             {
@@ -30,12 +31,26 @@ namespace Diplom_CRM
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
 
+            builder.Services.ConfigureApplicationCookie(options =>
+            {
+                options.LoginPath = "/Account/Login";
+                options.AccessDeniedPath = "/Account/AccessDenied";
+            });
+
+            builder.Services.AddAuthorization(options =>
+            {
+                options.FallbackPolicy = new AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .Build();
+            });
+
             builder.Services.AddControllersWithViews();
 
             builder.Services.AddScoped<IClientService, ClientService>();
             builder.Services.AddScoped<IDealService, DealService>();
             builder.Services.AddScoped<IActivityService, ActivityService>();
             builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+            builder.Services.AddScoped<IUserService, UserService>();
 
             var app = builder.Build();
 
@@ -46,16 +61,19 @@ namespace Diplom_CRM
             }
 
             app.UseHttpsRedirection();
+
+            //app.MapStaticAssets();
+            app.UseStaticFiles();
+
             app.UseRouting();
 
             app.UseAuthentication();
             app.UseAuthorization();
 
-            app.MapStaticAssets();
             app.MapControllerRoute(
                 name: "default",
-                pattern: "{controller=Home}/{action=Index}/{id?}")
-                .WithStaticAssets();
+                pattern: "{controller=Home}/{action=Index}/{id?}");
+                //.WithStaticAssets();
 
             app.Run();
         }
