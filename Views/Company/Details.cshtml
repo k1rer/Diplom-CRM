@@ -11,13 +11,11 @@
     <h2 class="mb-4">@company?.Name</h2>
 
     <div class="row">
-        <!-- Левая колонка: информация о компании и контакты -->
         <div class="col-md-4">
             <div class="card mb-4">
                 <div class="card-body">
                     <h5 class="card-title d-flex justify-content-between align-items-center">
                         @company?.Name
-                        <!-- Кнопка "Открыть сделку" -->
                         <button class="btn btn-outline-success btn-sm"
                                 hx-get="/Deal/Create?companyId=@(company?.Id ?? 0)"
                                 hx-target="#dealModalBody"
@@ -71,9 +69,7 @@
             @await Html.PartialAsync("_ContactListPartial", contacts)
         </div>
 
-        <!-- Правая колонка: форма активности и таймлайн -->
         <div class="col-md-8">
-            <!-- Сворачиваемая форма добавления активности -->
             <div class="card mb-4">
                 <div class="card-header p-2">
                     <button class="btn btn-link text-decoration-none p-0 collapsed"
@@ -125,7 +121,6 @@
                                            value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" />
                                 </div>
 
-                                <!-- Блок, показываемый только для задач -->
                                 <div id="taskCompletionBlock" style="display:none;">
                                     <div class="form-check mb-2">
                                         <input class="form-check-input" type="checkbox" id="taskIsCompleted" name="IsCompleted" value="true" />
@@ -173,7 +168,6 @@
                 </div>
             </div>
 
-            <!-- Таймлайн -->
             <div id="timelineContainer"
                  hx-get="/Company/GetTimeline?companyId=@(company?.Id ?? 0)"
                  hx-trigger="refreshTimeline from:body"
@@ -184,7 +178,6 @@
     </div>
 </div>
 
-<!-- Модальное окно добавления контакта -->
 <div class="modal fade" id="addContactModal" tabindex="-1" aria-labelledby="addContactModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -224,7 +217,6 @@
     </div>
 </div>
 
-<!-- Модальное окно редактирования контакта -->
 <div class="modal fade" id="editContactModal" tabindex="-1" aria-labelledby="editContactModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -233,13 +225,12 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
             </div>
             <div class="modal-body" id="editContactModalBody">
-                <!-- Форма загружается через htmx -->
+                <!-- Содержимое загрузится через htmx -->
             </div>
         </div>
     </div>
 </div>
 
-<!-- Модальное окно подтверждения удаления контакта -->
 <div class="modal fade" id="deleteContactModal" tabindex="-1" aria-labelledby="deleteContactModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -254,7 +245,6 @@
     </div>
 </div>
 
-<!-- Модальное окно создания сделки -->
 <div class="modal fade" id="dealModal" tabindex="-1" aria-labelledby="dealModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -263,7 +253,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
             </div>
             <div class="modal-body" id="dealModalBody">
-                <!-- Форма сделки загрузится через htmx -->
+                <!-- Содержимое загрузится через htmx -->
             </div>
         </div>
     </div>
@@ -271,19 +261,16 @@
 
 @section Scripts {
     <script>
-        // Закрытие модалки редактирования контакта
         document.body.addEventListener('closeEditModal', function() {
             var modal = bootstrap.Modal.getInstance(document.getElementById('editContactModal'));
             if (modal) modal.hide();
         });
 
-        // Закрытие модалки создания сделки
         document.body.addEventListener('closeDealModal', function() {
             var modal = bootstrap.Modal.getInstance(document.getElementById('dealModal'));
             if (modal) modal.hide();
         });
 
-        // Динамическое переключение полей при выборе типа активности
         document.querySelectorAll('input[name="Type"]').forEach(radio => {
             radio.addEventListener('change', function() {
                 const isTask = this.value === 'Task';
@@ -307,7 +294,6 @@
             });
         });
 
-        // Показать/скрыть дату завершения при отметке чекбокса
         const taskIsCompleted = document.getElementById('taskIsCompleted');
         if (taskIsCompleted) {
             taskIsCompleted.addEventListener('change', function() {

@@ -183,12 +183,10 @@ public class DealService : IDealService
         if (deal == null)
             return null;
 
-        // Компания через название
         var company = await _db.Companies
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Name == deal.Contact.Company);
 
-        // Все контакты компании
         var contacts = new List<ContactDTO>();
         if (company != null)
         {

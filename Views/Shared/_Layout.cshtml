@@ -40,9 +40,13 @@
             box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
         }
 
-        .main-content,
         .navbar-top {
             margin-left: var(--sidebar-collapsed-width);
+        }
+
+        .main-content{
+            margin-left: var(--sidebar-collapsed-width);
+            padding-top: 15px;
         }
 
         .navbar-top {
@@ -65,7 +69,6 @@
             transition: opacity 0.2s ease 0.1s;
         }
 
-        /* Развёрнутое состояние только для самой панели */
         .sidebar:hover {
             width: var(--sidebar-expanded-width);
         }
@@ -75,7 +78,6 @@
             opacity: 1;
         }
 
-        /* Индикатор htmx */
         .htmx-indicator {
             display: none;
         }
@@ -87,7 +89,6 @@
     @RenderSection("Styles", required: false)
 </head>
 <body>
-    <!-- Верхняя панель -->
     <nav class="navbar navbar-light bg-light border-bottom navbar-top">
         <div class="container-fluid">
             <span class="navbar-brand mb-0 h1">CRM Панель</span>
@@ -100,7 +101,6 @@
         </div>
     </nav>
 
-    <!-- Боковое меню (сайдбар) -->
     <aside class="sidebar d-flex flex-column text-white">
         <ul class="nav nav-pills flex-column mb-auto px-2">
             <li class="nav-item">
@@ -144,7 +144,6 @@
         </ul>
     </aside>
 
-    <!-- Основной контент -->
     <main class="main-content">
         @RenderBody()
     </main>
@@ -154,9 +153,7 @@
     <script src="~/lib/htmx/htmx.min.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 
-    <!-- Глобальные скрипты -->
     <script>
-        // Преобразование UTC-дат в локальное время
         function formatLocalTime(utcString) {
             const date = new Date(utcString);
             if (isNaN(date.getTime())) return utcString;

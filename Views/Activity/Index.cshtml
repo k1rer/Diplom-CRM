@@ -1,5 +1,4 @@
-﻿@* === ФАЙЛ: Views/Activity/Index.cshtml (исправленный) === *@
-@model IEnumerable<Diplom_CRM.Models.DTO.ActivityDTO>
+﻿@model IEnumerable<Diplom_CRM.Models.DTO.ActivityDTO>
 @{
     ViewData["Title"] = "Активности";
 }
@@ -27,7 +26,6 @@
 <div class="container-fluid">
     <h2 class="mb-4">Фильтр активностей</h2>
 
-    <!-- Вся форма фильтров обёрнута в карточку для визуального выделения -->
     <div class="card shadow-sm mb-4">
         <div class="card-body">
             <form id="advancedFilterForm"
@@ -36,9 +34,7 @@
                   hx-trigger="change, input delay:300ms from:input[type='text']"
                   hx-indicator="#activitySpinner">
 
-                <!-- Основная панель фильтров -->
                 <div class="row g-3 align-items-end">
-                    <!-- Сортировка -->
                     <div class="col-auto">
                         <label class="form-label fw-semibold">Сортировка</label>
                         <select name="sortBy" class="form-select">
@@ -47,14 +43,12 @@
                         </select>
                     </div>
 
-                    <!-- Поиск (занимает всё доступное пространство) -->
                     <div class="col">
                         <label class="form-label fw-semibold">Поиск</label>
                         <input type="text" name="search" class="form-control"
                                placeholder="Тема или описание..." />
                     </div>
 
-                    <!-- Тип активности -->
                     <div class="col-auto">
                         <label class="form-label fw-semibold">Тип</label>
                         <select name="type" class="form-select">
@@ -66,7 +60,6 @@
                         </select>
                     </div>
 
-                    <!-- Статус задачи -->
                     <div class="col-auto">
                         <label class="form-label fw-semibold">Статус задачи</label>
                         <select name="status" class="form-select">
@@ -76,7 +69,6 @@
                         </select>
                     </div>
 
-                    <!-- Кнопка раскрытия дополнительных фильтров -->
                     <div class="col-auto">
                         <button class="btn btn-outline-primary" type="button"
                                 data-bs-toggle="collapse" data-bs-target="#advancedFilters"
@@ -85,7 +77,6 @@
                         </button>
                     </div>
 
-                    <!-- Индикатор загрузки -->
                     <div class="col-auto">
                         <div id="activitySpinner" class="htmx-indicator">
                             <div class="spinner-border spinner-border-sm text-primary" role="status">
@@ -95,21 +86,17 @@
                     </div>
                 </div>
 
-                <!-- Скрытая панель расширенных фильтров -->
                 <div class="collapse mt-3" id="advancedFilters">
                     <div class="row g-3 align-items-end">
-                        <!-- Период: с даты -->
                         <div class="col-auto">
                             <label class="form-label fw-semibold">С даты</label>
                             <input type="date" name="fromDate" class="form-control" />
                         </div>
-                        <!-- Период: по дату -->
                         <div class="col-auto">
                             <label class="form-label fw-semibold">По дату</label>
                             <input type="date" name="toDate" class="form-control" />
                         </div>
 
-                        <!-- Компания -->
                         <div class="col-auto">
                             <label class="form-label fw-semibold">Компания</label>
                             <select id="companySelect" name="companyId" class="form-select"
@@ -118,7 +105,6 @@
                             </select>
                         </div>
 
-                        <!-- Сделка (заблокирована по умолчанию) -->
                         <div class="col-auto">
                             <label class="form-label fw-semibold">Сделка</label>
                             <select id="dealSelect" name="dealId" class="form-select"
@@ -127,7 +113,6 @@
                             </select>
                         </div>
 
-                        <!-- Менеджер (заблокирован по умолчанию) -->
                         <div class="col-auto">
                             <label class="form-label fw-semibold">Менеджер</label>
                             <select id="userSelect" name="userId" class="form-select"
@@ -136,7 +121,6 @@
                             </select>
                         </div>
 
-                        <!-- Кнопка сброса -->
                         <div class="col-auto">
                             <button type="button" id="resetFiltersBtn" class="btn btn-outline-secondary">
                                 <i class="bi bi-x-circle"></i> Сбросить всё
@@ -148,7 +132,6 @@
         </div>
     </div>
 
-    <!-- Блок переключателя вида -->
     <div class="d-flex justify-content-between align-items-center mt-3 mb-2">
         <h5 class="mb-0">Результаты</h5>
         <div class="btn-group btn-group-sm" role="group" aria-label="Вид отображения">
@@ -161,7 +144,6 @@
         </div>
     </div>
 
-    <!-- Контейнер результатов -->
     <div id="activityListContainer">
         @await Html.PartialAsync("_ActivityListPartial", Model)
     </div>
@@ -169,7 +151,6 @@
 
 @section Scripts {
     <script>
-        // Управление блокировкой сделки и менеджера при выборе компании
         document.getElementById('companySelect').addEventListener('change', function () {
             var dealSelect = document.getElementById('dealSelect');
             var userSelect = document.getElementById('userSelect');
@@ -184,7 +165,6 @@
             }
         });
 
-        // Переключатель вида списка/плитки с анимацией
         (function() {
             const STORAGE_KEY = 'activityViewMode';
             const wrappersSelector = '.activity-card-wrapper';
@@ -232,13 +212,10 @@
             });
         })();
 
-        // Сброс фильтров и обновление списка
         document.getElementById('resetFiltersBtn').addEventListener('click', function(e) {
             var form = document.getElementById('advancedFilterForm');
-            // Сбрасываем значения всех полей
             form.reset();
 
-            // Даём DOM обновиться после сброса, затем отправляем запрос через htmx
             requestAnimationFrame(() => {
                 htmx.ajax('GET', '/Activity/Index', {
                     target: '#activityListContainer',

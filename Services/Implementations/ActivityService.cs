@@ -153,12 +153,12 @@ public class ActivityService : IActivityService
     public async Task DeleteActivityAsync(int activityId)
     {
         var activity = await _db.Activities.FindAsync(activityId);
-        if (activity != null)
-        {
-            _db.Activities.Remove(activity);
-            await _db.SaveChangesAsync();
-        }
+        if (activity == null) 
+            throw new KeyNotFoundException($"Активность с Id={activityId} не найдена.");
+        _db.Activities.Remove(activity);
+        await _db.SaveChangesAsync();
     }
+
     public async Task<List<ActivityDTO>> GetFilteredActivitiesAsync(ActivityFilterViewModel filter)
     {
         var query = _db.Activities
@@ -171,7 +171,7 @@ public class ActivityService : IActivityService
         if (!string.IsNullOrWhiteSpace(filter.Type) && Enum.TryParse<TypeEnum>(filter.Type, out var typeEnum))
             query = query.Where(a => a.Type == typeEnum);
 
-        // Фильтр по компании (через строковое поле Contact.Company)
+        // Фильтр по компании
         if (filter.CompanyId.HasValue)
         {
             var company = await _db.Companies.FindAsync(filter.CompanyId.Value);
@@ -183,7 +183,7 @@ public class ActivityService : IActivityService
         if (filter.DealId.HasValue)
             query = query.Where(a => a.DealId == filter.DealId.Value);
 
-        // Статус выполнения (для задач)
+        // Статус выполнения
         if (!string.IsNullOrWhiteSpace(filter.Status) && filter.Status != "All")
         {
             if (filter.Status == "Pending")
@@ -224,7 +224,6 @@ public class ActivityService : IActivityService
                 query = query.Where(a => a.IsCompleted);
         }
 
-        // Даты фильтрации уже в UTC и с правильным Kind
         if (filter.FromDate.HasValue)
             query = query.Where(a => a.ScheduledDate >= filter.FromDate.Value);
         if (filter.ToDate.HasValue)
@@ -243,7 +242,6 @@ public class ActivityService : IActivityService
             _ => query.OrderByDescending(a => a.ScheduledDate)
         };
 
-        // Проекция без проблем с DateTime, так как все параметры уже UTC
         var activities = await query.Select(a => new ActivityDTO
         {
             Id = a.Id,
@@ -256,10 +254,12 @@ public class ActivityService : IActivityService
             DealId = a.DealId,
             ContactName = a.Contact.FirstName + " " + (a.Contact.LastName ?? ""),
             CompanyName = a.Contact.Company,
-            DealName = a.Deal != null ? a.Deal.Name : null
+            DealName = a.Deal != null ? a.Deal.Name : null,
+            CompletedDate = a.CompletedDate.HasValue
+                ? DateTime.SpecifyKind(a.CompletedDate.Value, DateTimeKind.Utc)
+                : null
         }).ToListAsync();
 
-        // CompanyId получим отдельно (как раньше)
         var companyNames = activities.Select(a => a.CompanyName).Where(n => n != null).Distinct().ToList();
         if (companyNames.Any())
         {
@@ -286,7 +286,12 @@ public class ActivityService : IActivityService
                 Type = a.Type,
                 Subject = a.Subject,
                 Description = a.Description,
-                ScheduledDate = a.ScheduledDate > DateTime.MinValue ? a.ScheduledDate : a.CreatedAt,
+                ScheduledDate = a.ScheduledDate > DateTime.MinValue
+                    ? DateTime.SpecifyKind(a.ScheduledDate, DateTimeKind.Utc)
+                    : DateTime.SpecifyKind(a.CreatedAt, DateTimeKind.Utc),
+                CompletedDate = a.CompletedDate.HasValue
+                    ? DateTime.SpecifyKind(a.CompletedDate.Value, DateTimeKind.Utc)
+                    : null,
                 IsCompleted = a.IsCompleted,
                 ContactId = a.ContactId,
                 DealId = a.DealId,

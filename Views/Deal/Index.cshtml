@@ -50,7 +50,6 @@
                         var fromStage = evt.from.dataset.stage;
                         var toStage = evt.to.dataset.stage;
 
-                        // Если статус не изменился – игнорируем
                         if (fromStage === toStage) return;
 
                         var dealId = evt.item.getAttribute('data-id');

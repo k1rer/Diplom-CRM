@@ -20,7 +20,6 @@
          hx-get="/Admin/Users"
          hx-trigger="refreshUsersList from:body"
          hx-swap="innerHTML">
-        <!-- таблица пользователей из Partials -->
         <table class="table table-hover align-middle">
             <thead class="table-light">
                 <tr>
@@ -40,7 +39,6 @@
             </tbody>
         </table>
     </div>
-    <!-- Модальное окно создания пользователя -->
     <div class="modal fade" id="createUserModal" tabindex="-1" aria-labelledby="createUserModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">

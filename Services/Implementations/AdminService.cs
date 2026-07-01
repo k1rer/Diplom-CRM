@@ -80,7 +80,6 @@ namespace Diplom_CRM.Services.Implementations
             if (!await _roleManager.RoleExistsAsync(newRole))
                 await _roleManager.CreateAsync(new IdentityRole(newRole));
 
-            // Удаляем текущие роли и добавляем новую
             await _userManager.RemoveFromRolesAsync(user, currentRoles);
             await _userManager.AddToRoleAsync(user, newRole);
         }
@@ -92,12 +91,10 @@ namespace Diplom_CRM.Services.Implementations
 
             if (user.LockoutEnd != null && user.LockoutEnd > DateTimeOffset.UtcNow)
             {
-                // Разблокировать
                 user.LockoutEnd = null;
             }
             else
             {
-                // Заблокировать навсегда (или на длительный срок)
                 user.LockoutEnd = DateTimeOffset.MaxValue;
             }
 

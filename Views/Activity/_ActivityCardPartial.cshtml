@@ -11,6 +11,8 @@
         _ => "bg-secondary"
     };
     var typeName = Model.Type.GetDisplayName();
+    var isTask = Model.Type == TypeEnum.Task;
+    var completed = Model.IsCompleted;
 }
 
 <div class="card mb-3 shadow-sm" id="activity-@Model.Id">
@@ -36,16 +38,49 @@
         {
             <p class="mb-1">@Model.Description</p>
         }
-        @if (Model.Type == TypeEnum.Task)
+
+
+        @if (isTask && completed && Model.CompletedDate.HasValue)
         {
-            <div class="form-check mt-2">
-                <input class="form-check-input" type="checkbox"
-                @(Model.IsCompleted ? "checked" : "")
-                       hx-post="/Activity/ToggleTaskCard?activityId=@Model.Id"
-                       hx-target="#activity-@Model.Id"
-                       hx-swap="outerHTML" />
-                <label class="form-check-label">Выполнено</label>
+            <div class="small text-muted mt-1">
+                <i class="bi bi-check-circle me-1"></i> Завершено:
+                <span class="local-time" data-utc="@Model.CompletedDate.Value.ToUniversalTime().ToString("o")">
+                    @Model.CompletedDate.Value.ToLocalTime().ToString("g")
+                </span>
             </div>
         }
+
+        <div class="d-flex justify-content-between align-items-center mt-2">
+            @if (isTask)
+            {
+                <form hx-post="/Activity/ToggleTaskCard"
+                      hx-target="#activity-@Model.Id"
+                      hx-swap="outerHTML"
+                      class="d-inline">
+                    <input type="hidden" name="activityId" value="@Model.Id" />
+                    <button type="submit"
+                            class="btn btn-sm @(completed ? "btn-outline-secondary" : "btn-success")">
+                        @if (completed)
+                        {
+                            <i class="bi bi-arrow-counterclockwise me-1"></i>
+                            <text>Снять</text>
+                        }
+                        else
+                        {
+                            <i class="bi bi-check-lg me-1"></i>
+                            <text>Выполнено</text>
+                        }
+                    </button>
+                </form>
+            }
+            <button class="btn btn-sm btn-outline-danger ms-auto"
+                    hx-delete="/Activity/DeleteActivity?activityId=@Model.Id"
+                    hx-include="#advancedFilterForm"
+                    hx-target="#activityListContainer"
+                    hx-swap="innerHTML"
+                    title="Удалить">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
     </div>
 </div>

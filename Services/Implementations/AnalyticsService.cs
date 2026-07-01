@@ -20,16 +20,13 @@ public class AnalyticsService : IAnalyticsService
         var now = DateTime.UtcNow;
         var monthStart = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
 
-        // Общая сумма сделок в работе
         var totalInProgress = await _db.Deals
             .Where(d => d.Status == StatusEnum.New || d.Status == StatusEnum.InProgress)
             .SumAsync(d => d.Amount);
 
-        // Новые контакты за текущий месяц
         var newClients = await _db.Contacts
             .CountAsync(c => c.CreatedAt >= monthStart);
 
-        // Конверсия: выигранные / закрытые (Won + Lost)
         var totalClosed = await _db.Deals
             .CountAsync(d => d.Status == StatusEnum.Won || d.Status == StatusEnum.Lost);
 
@@ -65,26 +62,21 @@ public class AnalyticsService : IAnalyticsService
     {
         var now = DateTime.UtcNow;
 
-        // Активные клиенты
         var activeClients = await _db.Companies.CountAsync();
 
-        // Объем воронки (New + InProgress)
         var pipelineAmount = await _db.Deals
             .Where(d => d.Status == StatusEnum.New || d.Status == StatusEnum.InProgress)
             .SumAsync(d => d.Amount);
 
-        // Win Rate
         var totalWon = await _db.Deals.CountAsync(d => d.Status == StatusEnum.Won);
         var totalLost = await _db.Deals.CountAsync(d => d.Status == StatusEnum.Lost);
         double winRate = 0;
         if (totalWon + totalLost > 0)
             winRate = Math.Round((double)totalWon / (totalWon + totalLost) * 100, 1);
 
-        // Задачи в работе
         var pendingTasks = await _db.Activities
             .CountAsync(a => !a.IsCompleted && a.Type == TypeEnum.Task);
 
-        // Количество сделок по стадиям
         var stageCounts = await _db.Deals
             .GroupBy(d => d.Status)
             .Select(g => new { g.Key, Count = g.Count() })
@@ -92,7 +84,6 @@ public class AnalyticsService : IAnalyticsService
 
         var countsDict = stageCounts.ToDictionary(x => x.Key.ToString(), x => x.Count);
 
-        // Суммы по стадиям
         var stageAmounts = await _db.Deals
             .GroupBy(d => d.Status)
             .Select(g => new { g.Key, Total = g.Sum(d => d.Amount) })
@@ -100,7 +91,6 @@ public class AnalyticsService : IAnalyticsService
 
         var amountsDict = stageAmounts.ToDictionary(x => x.Key.ToString(), x => x.Total);
 
-        // Топ-5 сделок
         var topDeals = await _db.Deals
             .Where(d => d.Status == StatusEnum.New || d.Status == StatusEnum.InProgress)
             .OrderByDescending(d => d.Amount)

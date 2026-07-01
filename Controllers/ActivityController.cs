@@ -48,7 +48,6 @@ public class ActivityController : Controller
 
         var activities = await _activityService.GetFilteredActivitiesAsync(filter);
 
-        // Для выпадающих списков
         ViewBag.Companies = await _clientService.GetCompaniesSelectListAsync();
         ViewBag.Deals = await _dealService.GetDealsSelectListAsync();
         ViewBag.Users = new List<SelectListItem>();
@@ -110,6 +109,34 @@ public class ActivityController : Controller
         var activity = await _activityService.GetActivityByIdAsync(activityId);
         if (activity == null)
             return NotFound();
+
         return PartialView("_ActivityCardPartial", activity);
+    }
+
+    // DELETE: Activity/DeleteActivity?activityId=...&type=...&companyId=...&...
+    [HttpDelete("Activity/DeleteActivity")]
+    public async Task<IActionResult> DeleteActivity(
+        int activityId,
+        string? type, int? companyId, int? dealId, string? status, string? userId,
+        DateTime? fromDate, DateTime? toDate, string? search, string? sortBy)
+    {
+        await _activityService.DeleteActivityAsync(activityId);
+
+        var filter = new ActivityFilterViewModel
+        {
+            Type = type,
+            CompanyId = companyId,
+            DealId = dealId,
+            Status = status ?? "All",
+            UserId = userId,
+            FromDate = fromDate,
+            ToDate = toDate,
+            Search = search,
+            SortBy = sortBy ?? "date_desc"
+        };
+
+        var activities = await _activityService.GetFilteredActivitiesAsync(filter);
+
+        return PartialView("_ActivityListPartial", activities);
     }
 }

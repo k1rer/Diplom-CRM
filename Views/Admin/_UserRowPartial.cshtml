@@ -21,7 +21,6 @@
     </td>
     <td>
         <div class="btn-group btn-group-sm">
-            @* Смена роли: если админ, то понизить до Manager, иначе повысить *@
             <form hx-post="/Admin/ChangeRole"
                   hx-target="#user-@Model.Id"
                   hx-swap="outerHTML">
@@ -32,7 +31,6 @@
                 </button>
             </form>
 
-            @* Блокировка/разблокировка *@
             <form hx-post="/Admin/ToggleLock"
                   hx-target="#user-@Model.Id"
                   hx-swap="outerHTML">

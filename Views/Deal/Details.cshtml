@@ -39,7 +39,6 @@
     </div>
 
     <div class="row">
-        <!-- Левая колонка: информация о сделке и клиенте -->
         <div class="col-md-4">
             <div class="card mb-4">
                 <div class="card-header fw-bold">О сделке</div>
@@ -86,9 +85,7 @@
             </div>
         </div>
 
-        <!-- Правая колонка: лента активностей -->
         <div class="col-md-8">
-            <!-- Форма добавления активности -->
             <div class="card mb-4">
                 <div class="card-header fw-bold">Добавить активность</div>
                 <div class="card-body">
@@ -146,18 +143,9 @@
                 </div>
             </div>
 
-            <!-- Лента активностей по сделке -->
             <div id="dealActivitiesContainer">
                 @await Html.PartialAsync("_DealActivitiesPartial", Model.Activities)
             </div>
         </div>
     </div>
 </div>
-
-@section Scripts {
-    <script>
-        document.body.addEventListener('htmx:afterSwap', function() {
-            // можно добавить обновление локального времени
-        });
-    </script>
-}
