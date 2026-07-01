@@ -1,4 +1,5 @@
 ﻿using Diplom_CRM.Models.DTO;
+using Diplom_CRM.Models.View;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace Diplom_CRM.Services
@@ -10,5 +11,6 @@ namespace Diplom_CRM.Services
         Task<Dictionary<string, List<DealKanbanDTO>>> GetKanbanBoardAsync();
         Task<DealKanbanDTO> GetDealKanbanByIdAsync(int dealId);
         Task<List<SelectListItem>> GetDealsSelectListAsync();
+        Task<DealDetailsViewModel?> GetDealDetailsAsync(int dealId);
     }
 }

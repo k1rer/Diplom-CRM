@@ -1,0 +1,163 @@
+﻿@model Diplom_CRM.Models.View.DealDetailsViewModel
+@{
+    ViewData["Title"] = $"Сделка: {Model.Name}";
+    var statusColors = new Dictionary<string, string>
+    {
+        ["New"] = "primary",
+        ["InProgress"] = "warning",
+        ["Won"] = "success",
+        ["Lost"] = "danger"
+    };
+    var statusName = Model.Status switch
+    {
+        "New" => "Новая",
+        "InProgress" => "В работе",
+        "Won" => "Выигранная",
+        "Lost" => "Проигранная",
+        _ => Model.Status
+    };
+}
+
+<div class="container-fluid">
+    <!-- Заголовок -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">@Model.Name</h2>
+        @{
+            var backUrl = Model.From == "dashboard" ? "/Dashboard/Index" : "/Deal/Index";
+            var backText = Model.From == "dashboard" ? "Назад к дашборду" : "Назад к доске";
+            var backIcon = Model.From == "dashboard" ? "bi-speedometer2" : "bi-kanban";
+        }
+        <a href="@backUrl" class="btn btn-outline-secondary">
+            <i class="bi @backIcon"></i> @backText
+        </a>
+    </div>
+
+    <!-- Статус и сумма -->
+    <div class="d-flex gap-3 mb-4">
+        <span class="badge bg-@statusColors.GetValueOrDefault(Model.Status, "secondary") fs-6">@statusName</span>
+        <span class="fs-4 fw-bold">@Model.Amount.ToString("C")</span>
+    </div>
+
+    <div class="row">
+        <!-- Левая колонка: информация о сделке и клиенте -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header fw-bold">О сделке</div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-6">Создана</dt>
+                        <dd class="col-sm-6">@Model.CreatedAt.ToShortDateString()</dd>
+                        <dt class="col-sm-6">Ожидаемое закрытие</dt>
+                        <dd class="col-sm-6">@Model.ExpectedCloseDate.ToShortDateString()</dd>
+                        <dt class="col-sm-6">Описание</dt>
+                        <dd class="col-sm-6">@(Model.Description ?? "—")</dd>
+                        <dt class="col-sm-6">Ответственный</dt>
+                        <dd class="col-sm-6">@Model.ManagerName</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header fw-bold">Клиент</div>
+                <div class="card-body">
+                    @if (!string.IsNullOrWhiteSpace(Model.CompanyName))
+                    {
+                        <h5>
+                            <a href="/Company/Details/@Model.CompanyId" class="text-decoration-none">
+                                @Model.CompanyName
+                            </a>
+                        </h5>
+                        @if (!string.IsNullOrWhiteSpace(Model.CompanyPhone))
+                        {
+                            <div><i class="bi bi-telephone-fill me-1"></i>@Model.CompanyPhone</div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.CompanyEmail))
+                        {
+                            <div><i class="bi bi-envelope-fill me-1"></i>@Model.CompanyEmail</div>
+                        }
+                    }
+                    else
+                    {
+                        <span class="text-muted">Не указан</span>
+                    }
+                    <hr />
+                    <div><strong>Контактное лицо:</strong> @Model.ContactFullName</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Правая колонка: лента активностей -->
+        <div class="col-md-8">
+            <!-- Форма добавления активности -->
+            <div class="card mb-4">
+                <div class="card-header fw-bold">Добавить активность</div>
+                <div class="card-body">
+                    @if (!Model.Contacts.Any())
+                    {
+                        <div class="alert alert-warning mb-0">Нет доступных контактов</div>
+                    }
+                    else
+                    {
+                        <form hx-post="/Activity/Create"
+                              hx-target="#dealActivitiesContainer"
+                              hx-swap="innerHTML"
+                              hx-on::after-request="this.reset()"
+                              hx-indicator="#activityIndicator">
+                            <input type="hidden" name="CompanyId" value="@(Model.CompanyId ?? 0)" />
+                            <input type="hidden" name="DealId" value="@Model.Id" />
+
+                            <div class="mb-2">
+                                <label class="form-label small">Контакт</label>
+                                <select name="ContactId" class="form-select form-select-sm" required>
+                                    @foreach (var c in Model.Contacts)
+                                    {
+                                        <option value="@c.Id">@c.FirstName @c.LastName</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small">Тема *</label>
+                                <input type="text" name="Subject" class="form-control form-control-sm" maxlength="200" required />
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small">Описание</label>
+                                <textarea name="Description" class="form-control form-control-sm" rows="2"></textarea>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="btn-group btn-group-sm">
+                                    <input type="radio" class="btn-check" name="Type" id="type-call-d" value="Call" checked>
+                                    <label class="btn btn-outline-secondary" for="type-call-d" title="Звонок"><i class="bi bi-telephone-fill"></i></label>
+                                    <input type="radio" class="btn-check" name="Type" id="type-email-d" value="Email">
+                                    <label class="btn btn-outline-secondary" for="type-email-d" title="Email"><i class="bi bi-envelope-fill"></i></label>
+                                    <input type="radio" class="btn-check" name="Type" id="type-meeting-d" value="Meeting">
+                                    <label class="btn btn-outline-secondary" for="type-meeting-d" title="Встреча"><i class="bi bi-people-fill"></i></label>
+                                    <input type="radio" class="btn-check" name="Type" id="type-task-d" value="Task">
+                                    <label class="btn btn-outline-secondary" for="type-task-d" title="Задача"><i class="bi bi-check2-square"></i></label>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-sm">
+                                    <span class="htmx-indicator" id="activityIndicator">
+                                        <span class="spinner-border spinner-border-sm me-1"></span>
+                                    </span>
+                                    <i class="bi bi-send"></i> Отправить
+                                </button>
+                            </div>
+                        </form>
+                    }
+                </div>
+            </div>
+
+            <!-- Лента активностей по сделке -->
+            <div id="dealActivitiesContainer">
+                @await Html.PartialAsync("_DealActivitiesPartial", Model.Activities)
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.body.addEventListener('htmx:afterSwap', function() {
+            // можно добавить обновление локального времени
+        });
+    </script>
+}

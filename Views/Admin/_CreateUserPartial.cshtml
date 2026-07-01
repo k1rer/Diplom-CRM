@@ -1,0 +1,27 @@
+﻿@model Diplom_CRM.Models.View.RegisterViewModel
+
+<form hx-post="/Admin/CreateUser"
+      hx-target="#createUserModal .modal-body"
+      hx-swap="innerHTML">
+    <div class="mb-3">
+        <label asp-for="FirstName" class="form-label"></label>
+        <input asp-for="FirstName" class="form-control" required />
+    </div>
+    <div class="mb-3">
+        <label asp-for="LastName" class="form-label"></label>
+        <input asp-for="LastName" class="form-control" required />
+    </div>
+    <div class="mb-3">
+        <label asp-for="Email" class="form-label"></label>
+        <input asp-for="Email" class="form-control" required />
+    </div>
+    <div class="mb-3">
+        <label asp-for="Password" class="form-label"></label>
+        <input asp-for="Password" class="form-control" required />
+    </div>
+    <div class="mb-3">
+        <label asp-for="ConfirmPassword" class="form-label"></label>
+        <input asp-for="ConfirmPassword" class="form-control" required />
+    </div>
+    <button type="submit" class="btn btn-primary">Создать</button>
+</form>

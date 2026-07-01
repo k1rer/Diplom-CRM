@@ -2,8 +2,10 @@
 using Diplom_CRM.Data.Entities;
 using Diplom_CRM.Data.Enums;
 using Diplom_CRM.Extensions;
+using Diplom_CRM.Models;
 using Diplom_CRM.Models.DTO;
-using Diplom_CRM.Services;
+using Diplom_CRM.Models.View;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Activity = Diplom_CRM.Data.Entities.Activity;
@@ -13,10 +15,17 @@ namespace Diplom_CRM.Services.Implementations;
 public class DealService : IDealService
 {
     private readonly ApplicationDbContext _db;
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly UserManager<AppUser> _userManager;
 
-    public DealService(ApplicationDbContext db)
+    public DealService(
+        ApplicationDbContext db,
+        IHttpContextAccessor httpContextAccessor,
+        UserManager<AppUser> userManager)
     {
         _db = db;
+        _httpContextAccessor = httpContextAccessor;
+        _userManager = userManager;
     }
 
     public async Task<DealKanbanDTO> CreateDealAsync(DealDTO dto)
@@ -24,14 +33,19 @@ public class DealService : IDealService
         var contact = await _db.Contacts.FindAsync(dto.ContactId)
             ?? throw new KeyNotFoundException($"Контакт с Id={dto.ContactId} не найден.");
 
+        var httpContext = _httpContextAccessor.HttpContext
+            ?? throw new InvalidOperationException("HttpContext отсутствует.");
+
+        var principal = httpContext.User
+            ?? throw new InvalidOperationException("Пользователь не аутентифицирован.");
+
+        var currentUser = await _userManager.GetUserAsync(principal)
+            ?? throw new InvalidOperationException("Пользователь не найден в базе.");
+
         if (dto.ExpectedCloseDate.Kind == DateTimeKind.Unspecified)
-        {
             dto.ExpectedCloseDate = DateTime.SpecifyKind(dto.ExpectedCloseDate, DateTimeKind.Local).ToUniversalTime();
-        }
         else if (dto.ExpectedCloseDate.Kind == DateTimeKind.Local)
-        {
             dto.ExpectedCloseDate = dto.ExpectedCloseDate.ToUniversalTime();
-        }
 
         var deal = new Deal
         {
@@ -40,6 +54,7 @@ public class DealService : IDealService
             ExpectedCloseDate = dto.ExpectedCloseDate,
             Status = StatusEnum.New,
             ContactId = dto.ContactId,
+            AppUserId = currentUser.Id,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -81,14 +96,15 @@ public class DealService : IDealService
             ?? throw new KeyNotFoundException($"Сделка с Id={dealId} не найдена.");
 
         var oldStage = deal.Status;
-        var oldStageName = oldStage.GetDisplayName();
-        var newStageName = stage.GetDisplayName();
+        deal.Status = stage;
+
+        _db.Entry(deal).State = EntityState.Modified;
 
         var activity = new Activity
         {
             Type = TypeEnum.Task,
-            Subject = $"Статус сделки изменён на \"{newStageName}\"",
-            Description = $"Сделка \"{deal.Name}\": {oldStageName} → {newStageName}",
+            Subject = $"Статус сделки изменён на \"{stage.GetDisplayName()}\"",
+            Description = $"Сделка \"{deal.Name}\": {oldStage.GetDisplayName()} → {stage.GetDisplayName()}",
             ScheduledDate = DateTime.UtcNow,
             IsCompleted = true,
             CompletedDate = DateTime.UtcNow,
@@ -153,5 +169,83 @@ public class DealService : IDealService
         return await _db.Deals
             .Select(d => new SelectListItem { Value = d.Id.ToString(), Text = d.Name })
             .ToListAsync();
+    }
+
+    public async Task<DealDetailsViewModel?> GetDealDetailsAsync(int dealId)
+    {
+        var deal = await _db.Deals
+            .AsNoTracking()
+            .Include(d => d.Contact)
+            .Include(d => d.Activities)
+                .ThenInclude(a => a.Contact)
+            .FirstOrDefaultAsync(d => d.Id == dealId);
+
+        if (deal == null)
+            return null;
+
+        // Компания через название
+        var company = await _db.Companies
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Name == deal.Contact.Company);
+
+        // Все контакты компании
+        var contacts = new List<ContactDTO>();
+        if (company != null)
+        {
+            contacts = await _db.Contacts
+                .Where(c => c.Company == company.Name)
+                .Select(c => new ContactDTO
+                {
+                    Id = c.Id,
+                    FirstName = c.FirstName,
+                    LastName = c.LastName,
+                    Email = c.Email,
+                    Phone = c.Phone,
+                    Position = c.Position,
+                    CompanyId = company.Id
+                })
+                .ToListAsync();
+        }
+
+        string? companyEmail = contacts.FirstOrDefault()?.Email;
+
+        var activities = deal.Activities.Select(a => new ActivityDTO
+        {
+            Id = a.Id,
+            Type = a.Type,
+            Subject = a.Subject,
+            Description = a.Description,
+            ScheduledDate = a.ScheduledDate > DateTime.MinValue
+                ? DateTime.SpecifyKind(a.ScheduledDate, DateTimeKind.Utc)
+                : DateTime.SpecifyKind(a.CreatedAt, DateTimeKind.Utc),
+            IsCompleted = a.IsCompleted,
+            ContactId = a.ContactId,
+            DealId = a.DealId,
+            CompanyId = company?.Id ?? 0,
+            ContactName = a.Contact.FirstName + " " + (a.Contact.LastName ?? ""),
+            CompanyName = deal.Contact.Company,
+            DealName = deal.Name
+        }).OrderByDescending(a => a.ScheduledDate).ToList();
+
+        var manager = deal.AppUserId != null ? await _userManager.FindByIdAsync(deal.AppUserId) : null;
+
+        return new DealDetailsViewModel
+        {
+            Id = deal.Id,
+            Name = deal.Name,
+            Amount = deal.Amount,
+            Status = deal.Status.ToString(),
+            CreatedAt = deal.CreatedAt,
+            ExpectedCloseDate = deal.ExpectedCloseDate,
+            Description = deal.Description,
+            CompanyId = company?.Id,
+            CompanyName = deal.Contact.Company,
+            CompanyPhone = company?.Phone,
+            CompanyEmail = companyEmail,
+            ContactFullName = deal.Contact.FirstName + " " + (deal.Contact.LastName ?? ""),
+            Contacts = contacts,
+            Activities = activities,
+            ManagerName = manager != null ? $"{manager.FirstName} {manager.LastName}" : "Не назначен"
+        };
     }
 }

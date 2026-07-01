@@ -42,21 +42,33 @@ public class DealController : Controller
         return PartialView("_DealCardPartial", updatedDeal);
     }
 
-    [HttpGet]
+    // GET: Deal/Details/{id}?from=kanban|dashboard
+    [HttpGet("Deal/Details/{id:int}")]
+    public async Task<IActionResult> Details(int id, string? from = null)
+    {
+        var viewModel = await _dealService.GetDealDetailsAsync(id);
+        if (viewModel == null)
+            return NotFound();
+
+        viewModel.From = from;
+        return View(viewModel);
+    }
+
+    // GET: Deal/Create?companyId=...
+    [HttpGet("Deal/Create")]
     public async Task<IActionResult> Create(int companyId)
     {
         var contacts = await _clientService.GetContactsByCompanyIdAsync(companyId);
-
         var viewModel = new CreateDealViewModel
         {
             Deal = new DealDTO { CompanyId = companyId },
             Contacts = contacts
         };
-
         return PartialView("_CreateDealPartial", viewModel);
     }
 
-    [HttpPost]
+    // POST: Deal/Create
+    [HttpPost("Deal/Create")]
     public async Task<IActionResult> Create(DealDTO dto)
     {
         if (!ModelState.IsValid)
@@ -68,10 +80,8 @@ public class DealController : Controller
         }
 
         await _dealService.CreateDealAsync(dto);
-
         Response.Headers["HX-Trigger"] = "closeDealModal, refreshTimeline";
         return Ok();
     }
-
 
 }

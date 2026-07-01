@@ -1,0 +1,55 @@
+﻿@model Diplom_CRM.Models.DTO.UserDTO
+
+<tr id="user-@Model.Id">
+    <td>@Model.FirstName @Model.LastName</td>
+    <td>@Model.Email</td>
+    <td>
+        <span class="badge @(Model.Role == "Admin" ? "bg-danger" : "bg-secondary")">
+            @Model.Role
+        </span>
+    </td>
+    <td>@Model.DealsInProgressCount</td>
+    <td>
+        @if (Model.IsLocked)
+        {
+            <span class="text-danger">Заблокирован</span>
+        }
+        else
+        {
+            <span class="text-success">Активен</span>
+        }
+    </td>
+    <td>
+        <div class="btn-group btn-group-sm">
+            @* Смена роли: если админ, то понизить до Manager, иначе повысить *@
+            <form hx-post="/Admin/ChangeRole"
+                  hx-target="#user-@Model.Id"
+                  hx-swap="outerHTML">
+                <input type="hidden" name="userId" value="@Model.Id" />
+                <input type="hidden" name="newRole" value="@(Model.Role == "Admin" ? "Manager" : "Admin")" />
+                <button type="submit" class="btn btn-outline-warning">
+                    <i class="bi bi-arrow-repeat"></i> @(Model.Role == "Admin" ? "В менеджеры" : "В админы")
+                </button>
+            </form>
+
+            @* Блокировка/разблокировка *@
+            <form hx-post="/Admin/ToggleLock"
+                  hx-target="#user-@Model.Id"
+                  hx-swap="outerHTML">
+                <input type="hidden" name="userId" value="@Model.Id" />
+                <button type="submit" class="btn btn-outline-@(Model.IsLocked ? "success" : "danger")">
+                    @if (Model.IsLocked)
+                    {
+                        <i class="bi bi-unlock"></i>
+                        <text>Разблокировать</text>
+                    }
+                    else
+                    {
+                        <i class="bi bi-lock"></i>
+                        <text>Заблокировать</text>
+                    }
+                </button>
+            </form>
+        </div>
+    </td>
+</tr>

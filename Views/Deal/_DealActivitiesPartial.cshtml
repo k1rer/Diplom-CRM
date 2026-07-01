@@ -1,0 +1,92 @@
+﻿@model IEnumerable<Diplom_CRM.Models.DTO.ActivityDTO>
+
+@if (Model == null || !Model.Any())
+{
+    <p class="text-muted text-center py-3">Активностей по сделке пока нет</p>
+}
+else
+{
+    <div class="position-relative border-start border-2 ps-4 ms-2">
+        @foreach (var activity in Model)
+        {
+            <div class="mb-4 position-relative">
+                <span class="position-absolute start-0 translate-middle bg-white border rounded-circle p-1"
+                      style="left: -26px !important; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                    @switch (activity.Type.ToString())
+                    {
+                        case "Call":
+                            <i class="bi bi-telephone-fill text-primary"></i>
+                            break;
+                        case "Email":
+
+                            <i class="bi bi-envelope-fill text-info"></i>
+                            break;
+                        case "Meeting":
+
+                            <i class="bi bi-people-fill text-success"></i>
+                            break;
+                        case "Task":
+
+                            <i class="bi bi-check2-square @(activity.IsCompleted ? "text-success" : "text-warning")"></i>
+                            break;
+                        default:
+
+                            <i class="bi bi-circle text-secondary"></i>
+                            break;
+                    }
+                </span>
+                <div class="card shadow-sm border-0 @(activity.IsCompleted ? "bg-success bg-opacity-10 border-success" : "bg-light")">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between text-muted small mb-1">
+                            <strong>@activity.Type</strong>
+                            <span class="local-time" data-utc="@activity.ScheduledDate.ToString("o")">
+                                @activity.ScheduledDate.ToString("g")
+                            </span>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(activity.Subject))
+                        {
+                            <h6 class="mb-1 @(activity.IsCompleted ? "text-decoration-line-through" : "")">@activity.Subject</h6>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(activity.Description))
+                        {
+                            <p class="mb-1 @(activity.IsCompleted ? "text-decoration-line-through" : "")">@activity.Description</p>
+                        }
+                        @if (activity.Type == Diplom_CRM.Data.Enums.TypeEnum.Task)
+                        {
+                            <div class="d-flex justify-content-end mt-2">
+                                <form hx-post="/Activity/ToggleTask"
+                                      hx-target="#dealActivitiesContainer"
+                                      hx-swap="innerHTML"
+                                      class="d-inline">
+                                    <input type="hidden" name="activityId" value="@activity.Id" />
+                                    <input type="hidden" name="companyId" value="@activity.CompanyId" />
+                                    <button type="submit" class="btn btn-sm @(activity.IsCompleted ? "btn-outline-secondary" : "btn-success")">
+                                        @if (activity.IsCompleted)
+                                        {
+                                            <i class="bi bi-arrow-counterclockwise me-1"></i>
+                                            <text>Снять</text>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-check-lg me-1"></i>
+                                            <text>Выполнено</text>
+                                        }
+                                    </button>
+                                </form>
+                            </div>
+                        }
+                        <div class="text-end mt-1">
+                            <button class="btn btn-sm btn-outline-danger"
+                                    hx-delete="/Activity/Delete?activityId=@activity.Id&companyId=@activity.CompanyId"
+                                    hx-target="#dealActivitiesContainer"
+                                    hx-swap="innerHTML"
+                                    title="Удалить">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

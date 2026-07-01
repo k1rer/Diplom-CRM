@@ -2,7 +2,11 @@
 
 <div class="card shadow-sm mb-2" data-id="@Model.Id">
     <div class="card-body p-2">
-        <h6 class="card-title mb-1">@Model.Name</h6>
+        <h6 class="card-title mb-1">
+            <a href="/Deal/Details/@Model.Id?from=kanban" class="text-decoration-none stretched-link">
+                @Model.Name
+            </a>
+        </h6>
         @if (!string.IsNullOrWhiteSpace(Model.CompanyName))
         {
             <small class="text-muted d-block">@Model.CompanyName</small>

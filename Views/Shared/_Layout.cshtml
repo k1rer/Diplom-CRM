@@ -3,6 +3,7 @@
 @inject UserManager<AppUser> UserManager
 @{
     var currentUser = await UserManager.GetUserAsync(User);
+    bool isAdmin = currentUser != null && await UserManager.IsInRoleAsync(currentUser, "Admin");
     var displayName = currentUser != null
         ? $"{currentUser.FirstName} {currentUser.LastName}"
         : User?.Identity?.Name ?? "Гость";
@@ -130,6 +131,16 @@
                     <span class="link-text">Задачи</span>
                 </a>
             </li>
+            @if (isAdmin)
+            {
+                <li class="nav-item">
+                    <a class="nav-link text-white @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["action"]?.ToString() == "Users" ? "active bg-primary" : "")"
+                       href="/Admin/Users">
+                        <i class="bi bi-people-fill fs-5"></i>
+                        <span class="link-text">Пользователи</span>
+                    </a>
+                </li>
+            }
         </ul>
     </aside>
 

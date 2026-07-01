@@ -51,7 +51,9 @@ namespace Diplom_CRM
             builder.Services.AddScoped<IActivityService, ActivityService>();
             builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
             builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IAdminService, AdminService>();
 
+            builder.Services.AddHttpContextAccessor();
             var app = builder.Build();
 
             if (!app.Environment.IsDevelopment())
