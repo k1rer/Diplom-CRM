@@ -34,5 +34,14 @@
         "dist/chart.min.js"
       ]
     }
+  ,
+{
+  "provider": "jsdelivr",
+  "library": "chart.js@4.5.1",
+  "destination": "wwwroot/lib/chart.js/",
+  "files": [
+    "dist/chart.umd.min.js"
   ]
+}
+]
 }
