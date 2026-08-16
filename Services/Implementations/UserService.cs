@@ -4,18 +4,25 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Diplom_CRM.Services.Implementations
 {
-    public class UserService : IUserService
+    public class UserService(
+        UserManager<AppUser> userManager,
+        ILogger<UserService> logger) : IUserService
     {
-        private readonly UserManager<AppUser> _userManager;
-
-        public UserService(UserManager<AppUser> userManager)
-        {
-            _userManager = userManager;
-        }
-
         public async Task<bool> AnyUsersExistAsync()
         {
-            return await _userManager.Users.AnyAsync();
+            return await userManager.Users.AnyAsync();
+        }
+
+        public async Task AssignAdminRoleAsync(AppUser user)
+        {
+            var result = await userManager.AddToRoleAsync(user, "Admin");
+
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                logger.LogError("Не удалось назначить роль Admin пользователю {UserId}: {Errors}", user.Id, errors);
+                throw new InvalidOperationException($"Ошибка назначения роли Admin: {errors}");
+            }
         }
     }
 }
