@@ -105,7 +105,6 @@ public class AccountController(
         var result = await userManager.CreateAsync(user, model.Password);
         if (result.Succeeded)
         {
-            // Назначаем роль первого администратора
             await userService.AssignAdminRoleAsync(user);
 
             await signInManager.SignInAsync(user, isPersistent: false);

@@ -178,5 +178,16 @@
         document.addEventListener('DOMContentLoaded', updateLocalTimes);
         document.body.addEventListener('htmx:afterSwap', updateLocalTimes);
     </script>
+
+    @Html.AntiForgeryToken()
+
+    <script>
+            document.body.addEventListener('htmx:configRequest', (evt) => {
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                if (token) {
+                    evt.detail.headers['RequestVerificationToken'] = token;
+                }
+            });
+    </script>
 </body>
 </html>

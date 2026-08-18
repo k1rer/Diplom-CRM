@@ -1,56 +1,41 @@
-﻿using Diplom_CRM.Extensions;
+﻿using System.Security.Claims;
+using Diplom_CRM.Extensions;
 using Diplom_CRM.Models.DTO;
 using Diplom_CRM.Models.View;
 using Diplom_CRM.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace Diplom_CRM.Controllers;
 
-public class ActivityController : Controller
+[Authorize]
+public class ActivityController(
+    IActivityService activityService,
+    IClientService clientService,
+    IDealService dealService) : Controller
 {
-    private readonly IActivityService _activityService;
-    private readonly IClientService _clientService;
-    private readonly IDealService _dealService;
-
-    public ActivityController(IActivityService activityService, 
-                              IClientService clientService, 
-                              IDealService dealService)
-    {
-        _activityService = activityService;
-        _clientService = clientService;
-        _dealService = dealService;
-    }
-
     // GET: Activity/Index
     [HttpGet]
-    public async Task<IActionResult> Index(
-        string? type, int? companyId, int? dealId, string? status, string? userId,
-        DateTime? fromDate, DateTime? toDate, string? search, string? sortBy)
+    public async Task<IActionResult> Index([FromQuery] ActivityFilterViewModel filter)
     {
-        if (fromDate.HasValue)
-            fromDate = DateTime.SpecifyKind(fromDate.Value, DateTimeKind.Utc);
-        if (toDate.HasValue)
-            toDate = DateTime.SpecifyKind(toDate.Value, DateTimeKind.Utc);
+        // Нормализуем даты в UTC для PostgreSQL
+        filter.FromDate = filter.FromDate?.ToUniversalTime();
+        filter.ToDate = filter.ToDate?.ToUniversalTime();
+        filter.Status ??= "All";
+        filter.SortBy ??= "date_desc";
 
-        var filter = new ActivityFilterViewModel
-        {
-            Type = type,
-            CompanyId = companyId,
-            DealId = dealId,
-            Status = status ?? "All",
-            UserId = userId,
-            FromDate = fromDate,
-            ToDate = toDate,
-            Search = search,
-            SortBy = sortBy ?? "date_desc"
-        };
+        // Параллельная загрузка справочников для ViewBag
+        var companiesTask = clientService.GetCompaniesSelectListAsync();
+        var dealsTask = dealService.GetDealsSelectListAsync();
 
-        var activities = await _activityService.GetFilteredActivitiesAsync(filter);
+        await Task.WhenAll(companiesTask, dealsTask);
 
-        ViewBag.Companies = await _clientService.GetCompaniesSelectListAsync();
-        ViewBag.Deals = await _dealService.GetDealsSelectListAsync();
-        ViewBag.Users = new List<SelectListItem>();
+        ViewBag.Companies = await companiesTask;
+        ViewBag.Deals = await dealsTask;
+        ViewBag.Users = Enumerable.Empty<SelectListItem>();
+
+        var activities = await activityService.GetFilteredActivitiesAsync(filter);
 
         if (Request.IsHtmxRequest())
             return PartialView("_ActivityListPartial", activities);
@@ -62,81 +47,78 @@ public class ActivityController : Controller
     [HttpGet]
     public async Task<IActionResult> GetPendingTasks()
     {
-        var tasks = await _activityService.GetPendingTasksForUserAsync("current-user");
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        var tasks = await activityService.GetPendingTasksForUserAsync(userId);
         return PartialView("_PendingTasksPartial", tasks);
     }
 
     // POST: Activity/ToggleTask
     [HttpPost]
-    public async Task<IActionResult> ToggleTask([FromForm] int activityId, [FromForm] int companyId)
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ToggleTask(int activityId, int companyId)
     {
-        await _activityService.ToggleTaskCompletionAsync(activityId);
-        var activities = await _activityService.GetActivitiesByCompanyIdAsync(companyId);
+        await activityService.ToggleTaskCompletionAsync(activityId);
+        var activities = await activityService.GetActivitiesByCompanyIdAsync(companyId);
         return PartialView("~/Views/Company/_TimelinePartial.cshtml", activities);
     }
 
-    // POST/DELETE: Activity/Delete
+    // DELETE: Activity/Delete
     [HttpDelete]
-    [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int activityId, int companyId)
     {
-        await _activityService.DeleteActivityAsync(activityId);
-        var activities = await _activityService.GetActivitiesByCompanyIdAsync(companyId);
+        await activityService.DeleteActivityAsync(activityId);
+        var activities = await activityService.GetActivitiesByCompanyIdAsync(companyId);
         return PartialView("~/Views/Company/_TimelinePartial.cshtml", activities);
     }
 
     // POST: Activity/Create
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(ActivityDTO dto)
     {
         if (!ModelState.IsValid)
         {
-            var currentActivities = await _activityService.GetActivitiesByCompanyIdAsync(dto.CompanyId);
+            Response.StatusCode = 400; // Уведомляем HTMX об ошибке валидации
+            var currentActivities = await activityService.GetActivitiesByCompanyIdAsync(dto.CompanyId);
             return PartialView("~/Views/Company/_TimelinePartial.cshtml", currentActivities);
         }
 
-        await _activityService.CreateActivityAsync(dto);
+        await activityService.CreateActivityAsync(dto);
 
-        var activities = await _activityService.GetActivitiesByCompanyIdAsync(dto.CompanyId);
+        var activities = await activityService.GetActivitiesByCompanyIdAsync(dto.CompanyId);
         return PartialView("~/Views/Company/_TimelinePartial.cshtml", activities);
     }
 
-    // POST: Activity/ToggleTaskCard?activityId=...
+    // POST: Activity/ToggleTaskCard
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> ToggleTaskCard(int activityId)
     {
-        await _activityService.ToggleTaskCompletionAsync(activityId);
-        var activity = await _activityService.GetActivityByIdAsync(activityId);
+        await activityService.ToggleTaskCompletionAsync(activityId);
+        var activity = await activityService.GetActivityByIdAsync(activityId);
         if (activity == null)
             return NotFound();
 
         return PartialView("_ActivityCardPartial", activity);
     }
 
-    // DELETE: Activity/DeleteActivity?activityId=...&type=...&companyId=...&...
-    [HttpDelete("Activity/DeleteActivity")]
-    public async Task<IActionResult> DeleteActivity(
-        int activityId,
-        string? type, int? companyId, int? dealId, string? status, string? userId,
-        DateTime? fromDate, DateTime? toDate, string? search, string? sortBy)
+    // DELETE: Activity/DeleteActivity
+    [HttpDelete]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteActivity(int activityId, [FromQuery] ActivityFilterViewModel filter)
     {
-        await _activityService.DeleteActivityAsync(activityId);
+        await activityService.DeleteActivityAsync(activityId);
 
-        var filter = new ActivityFilterViewModel
-        {
-            Type = type,
-            CompanyId = companyId,
-            DealId = dealId,
-            Status = status ?? "All",
-            UserId = userId,
-            FromDate = fromDate,
-            ToDate = toDate,
-            Search = search,
-            SortBy = sortBy ?? "date_desc"
-        };
+        filter.FromDate = filter.FromDate?.ToUniversalTime();
+        filter.ToDate = filter.ToDate?.ToUniversalTime();
+        filter.Status ??= "All";
+        filter.SortBy ??= "date_desc";
 
-        var activities = await _activityService.GetFilteredActivitiesAsync(filter);
-
+        var activities = await activityService.GetFilteredActivitiesAsync(filter);
         return PartialView("_ActivityListPartial", activities);
     }
 }

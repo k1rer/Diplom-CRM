@@ -6,7 +6,6 @@ public static class DbInitializer
 {
     public static async Task SeedRolesAndAdminAsync(IServiceProvider serviceProvider)
     {
-        // Создаем область видимости (scope) для получения Scoped-сервисов (RoleManager, UserManager)
         using var scope = serviceProvider.CreateScope();
         var services = scope.ServiceProvider;
 
@@ -15,7 +14,6 @@ public static class DbInitializer
 
         try
         {
-            // Список ролей, необходимых для CRM-системы
             string[] roles = ["Admin", "Manager", "User"];
 
             foreach (var roleName in roles)
