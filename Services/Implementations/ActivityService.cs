@@ -50,6 +50,7 @@ public class ActivityService : IActivityService
             Subject = dto.Subject,
             Description = dto.Description,
             ScheduledDate = dto.ScheduledDate,
+            IsCompleted = dto.IsCompleted,
             ContactId = dto.ContactId,
             DealId = dto.DealId
         };

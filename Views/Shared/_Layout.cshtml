@@ -148,6 +148,16 @@
         @RenderBody()
     </main>
 
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
+        <div id="appToast" class="toast align-items-center text-white border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body" id="appToastMessage">
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/lib/htmx/htmx.min.js"></script>
@@ -179,8 +189,6 @@
         document.body.addEventListener('htmx:afterSwap', updateLocalTimes);
     </script>
 
-    @Html.AntiForgeryToken()
-
     <script>
             document.body.addEventListener('htmx:configRequest', (evt) => {
                 const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
@@ -189,5 +197,69 @@
                 }
             });
     </script>
+
+    <script>
+            document.body.addEventListener('showToast', function(evt) {
+                const rawMessage = evt.detail.message || '';
+                const type = evt.detail.type || 'info'; // 'success', 'error', 'warning', 'info'
+
+                const message = decodeURIComponent(rawMessage);
+
+                const toastEl = document.getElementById('appToast');
+                const toastMessageEl = document.getElementById('appToastMessage');
+
+                if (!toastEl || !toastMessageEl) return;
+
+                toastEl.classList.remove('bg-success', 'bg-danger', 'bg-warning', 'bg-info', 'bg-dark');
+
+                switch (type.toLowerCase()) {
+                    case 'success':
+                        toastEl.classList.add('bg-success');
+                        break;
+                    case 'error':
+                        toastEl.classList.add('bg-danger');
+                        break;
+                    case 'warning':
+                        toastEl.classList.add('bg-warning', 'text-dark');
+                        break;
+                    default:
+                        toastEl.classList.add('bg-info');
+                        break;
+                }
+
+                toastMessageEl.textContent = message;
+                const bsToast = bootstrap.Toast.getOrCreateInstance(toastEl, { delay: 4000 });
+                bsToast.show();
+            });
+    </script>
+
+    <script>
+            function resetActivityForm(form) {
+                form.reset();
+
+                const taskBlock = document.getElementById('taskCompletionBlock');
+                const completedDateGroup = document.getElementById('completedDateGroup');
+
+                if (taskBlock) taskBlock.style.display = 'none';
+                if (completedDateGroup) completedDateGroup.style.display = 'none';
+            }
+
+            document.addEventListener('change', function(e) {
+                if (e.target && e.target.name === 'Type') {
+                    const taskBlock = document.getElementById('taskCompletionBlock');
+                    if (taskBlock) {
+                        taskBlock.style.display = (e.target.value === 'Task') ? 'block' : 'none';
+                    }
+                }
+
+                if (e.target && e.target.id === 'taskIsCompleted') {
+                    const completedDateGroup = document.getElementById('completedDateGroup');
+                    if (completedDateGroup) {
+                        completedDateGroup.style.display = e.target.checked ? 'block' : 'none';
+                    }
+                }
+            });
+    </script>
+    @Html.AntiForgeryToken()
 </body>
 </html>

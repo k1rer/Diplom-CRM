@@ -19,13 +19,11 @@ public class ActivityController(
     [HttpGet]
     public async Task<IActionResult> Index([FromQuery] ActivityFilterViewModel filter)
     {
-        // Нормализуем даты в UTC для PostgreSQL
         filter.FromDate = filter.FromDate?.ToUniversalTime();
         filter.ToDate = filter.ToDate?.ToUniversalTime();
         filter.Status ??= "All";
         filter.SortBy ??= "date_desc";
 
-        // Параллельная загрузка справочников для ViewBag
         var companiesTask = clientService.GetCompaniesSelectListAsync();
         var dealsTask = dealService.GetDealsSelectListAsync();
 
@@ -82,7 +80,7 @@ public class ActivityController(
     {
         if (!ModelState.IsValid)
         {
-            Response.StatusCode = 400; // Уведомляем HTMX об ошибке валидации
+            Response.StatusCode = 400;
             var currentActivities = await activityService.GetActivitiesByCompanyIdAsync(dto.CompanyId);
             return PartialView("~/Views/Company/_TimelinePartial.cshtml", currentActivities);
         }

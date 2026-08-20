@@ -91,78 +91,7 @@
                         }
                         else
                         {
-                            <form hx-post="/Activity/Create"
-                                  hx-target="#timelineContainer"
-                                  hx-swap="innerHTML"
-                                  hx-on::after-request="this.reset()"
-                                  hx-indicator="#activityIndicator">
-
-                                <input type="hidden" name="CompanyId" value="@(company?.Id ?? 0)" />
-
-                                <div class="mb-2">
-                                    <label for="activityContact" class="form-label small">Контакт</label>
-                                    <select class="form-select form-select-sm" id="activityContact" name="ContactId" required>
-                                        @foreach (var contact in contacts)
-                                        {
-                                            <option value="@contact.Id">@contact.FirstName @contact.LastName</option>
-                                        }
-                                    </select>
-                                </div>
-
-                                <div class="mb-2">
-                                    <label for="activitySubject" class="form-label small">Тема *</label>
-                                    <input type="text" class="form-control form-control-sm" id="activitySubject" name="Subject"
-                                           maxlength="200" required placeholder="Краткое описание" />
-                                </div>
-
-                                <div class="mb-2">
-                                    <label for="activityScheduledDate" class="form-label small scheduled-label">Дата и время</label>
-                                    <input type="datetime-local" class="form-control form-control-sm" id="activityScheduledDate" name="ScheduledDate"
-                                           value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" />
-                                </div>
-
-                                <div id="taskCompletionBlock" style="display:none;">
-                                    <div class="form-check mb-2">
-                                        <input class="form-check-input" type="checkbox" id="taskIsCompleted" name="IsCompleted" value="true" />
-                                        <label class="form-check-label small" for="taskIsCompleted">Задача уже выполнена</label>
-                                    </div>
-                                    <div class="mb-2" id="completedDateGroup" style="display:none;">
-                                        <label for="activityCompletedDate" class="form-label small">Дата завершения</label>
-                                        <input type="datetime-local" class="form-control form-control-sm" id="activityCompletedDate" name="CompletedDate"
-                                               value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" />
-                                    </div>
-                                </div>
-
-                                <textarea class="form-control form-control-sm border-0 bg-light mb-2" rows="2" name="Description"
-                                          placeholder="Подробности (необязательно)"></textarea>
-
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div class="btn-group btn-group-sm" role="group" aria-label="Тип активности">
-                                        <input type="radio" class="btn-check" name="Type" id="type-call" value="Call" autocomplete="off" checked>
-                                        <label class="btn btn-outline-secondary" for="type-call" title="Звонок">
-                                            <i class="bi bi-telephone-fill"></i>
-                                        </label>
-                                        <input type="radio" class="btn-check" name="Type" id="type-email" value="Email" autocomplete="off">
-                                        <label class="btn btn-outline-secondary" for="type-email" title="Email">
-                                            <i class="bi bi-envelope-fill"></i>
-                                        </label>
-                                        <input type="radio" class="btn-check" name="Type" id="type-meeting" value="Meeting" autocomplete="off">
-                                        <label class="btn btn-outline-secondary" for="type-meeting" title="Встреча">
-                                            <i class="bi bi-people-fill"></i>
-                                        </label>
-                                        <input type="radio" class="btn-check" name="Type" id="type-task" value="Task" autocomplete="off">
-                                        <label class="btn btn-outline-secondary" for="type-task" title="Задача">
-                                            <i class="bi bi-check2-square"></i>
-                                        </label>
-                                    </div>
-                                    <button type="submit" class="btn btn-primary btn-sm">
-                                        <span class="htmx-indicator" id="activityIndicator">
-                                            <span class="spinner-border spinner-border-sm me-1"></span>
-                                        </span>
-                                        <i class="bi bi-send"></i> Отправить
-                                    </button>
-                                </div>
-                            </form>
+                            @await Html.PartialAsync("_CreateActivity")
                         }
                     </div>
                 </div>

@@ -1,81 +1,103 @@
-﻿using Diplom_CRM.Extensions;
+﻿using System.Security.Claims;
+using Diplom_CRM.Extensions;
 using Diplom_CRM.Models.View;
 using Diplom_CRM.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Diplom_CRM.Controllers
+namespace Diplom_CRM.Controllers;
+
+[Authorize(Roles = "Admin")]
+public class AdminController(IAdminService adminService) : Controller
 {
-    [Authorize(Roles = "Admin")]
-    public class AdminController : Controller
+    // GET: Admin/Users
+    [HttpGet]
+    public async Task<IActionResult> Users()
     {
-        private readonly IAdminService _adminService;
+        var users = await adminService.GetUsersAsync();
 
-        public AdminController(IAdminService adminService)
+        if (Request.IsHtmxRequest())
+            return PartialView("_UsersListPartial", users);
+
+        return View(users);
+    }
+
+    // POST: Admin/ChangeRole
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ChangeRole(string userId, string newRole)
+    {
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == currentUserId)
         {
-            _adminService = adminService;
+            var message = Uri.EscapeDataString("Нельзя изменить роль самому себе.");
+            Response.Headers["HX-Trigger"] = $"{{\"showToast\": {{\"message\": \"{message}\", \"type\": \"error\"}}}}";
+            var currentUserDto = await adminService.GetUserByIdAsync(userId);
+            return PartialView("_UserRowPartial", currentUserDto);
         }
 
-        // GET: Admin/Users
-        [HttpGet]
-        public async Task<IActionResult> Users()
+        await adminService.ChangeRoleAsync(userId, newRole);
+        var userDto = await adminService.GetUserByIdAsync(userId);
+
+        if (userDto == null)
+            return NotFound();
+
+        return PartialView("_UserRowPartial", userDto);
+    }
+
+    // POST: Admin/ToggleLock
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ToggleLock(string userId)
+    {
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == currentUserId)
         {
-            var users = await _adminService.GetUsersAsync();
-
-            if (Request.IsHtmxRequest())
-                return PartialView("_UsersListPartial", users);
-
-            return View(users);
+            var message = Uri.EscapeDataString("Нельзя заблокировать самого себя.");
+            Response.Headers["HX-Trigger"] = $"{{\"showToast\": {{\"message\": \"{message}\", \"type\": \"error\"}}}}";
+            var currentUserDto = await adminService.GetUserByIdAsync(userId);
+            return PartialView("_UserRowPartial", currentUserDto);
         }
 
-        // POST: Admin/ChangeRole
-        [HttpPost]
-        public async Task<IActionResult> ChangeRole(string userId, string newRole)
+        await adminService.ToggleLockoutAsync(userId);
+        var userDto = await adminService.GetUserByIdAsync(userId);
+
+        if (userDto == null)
+            return NotFound();
+
+        return PartialView("_UserRowPartial", userDto);
+    }
+
+    // GET: Admin/CreateUser
+    [HttpGet]
+    public IActionResult CreateUser()
+    {
+        return PartialView("_CreateUserPartial", new RegisterViewModel());
+    }
+
+    // POST: Admin/CreateUser
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateUser(RegisterViewModel model)
+    {
+        if (!ModelState.IsValid)
         {
-            await _adminService.ChangeRoleAsync(userId, newRole);
-            var userDto = await _adminService.GetUserByIdAsync(userId);
-            return PartialView("_UserRowPartial", userDto);
+            Response.Headers["HX-Retarget"] = "#createUserModal .modal-body";
+            return PartialView("_CreateUserPartial", model);
         }
 
-        // POST: Admin/ToggleLock
-        [HttpPost]
-        public async Task<IActionResult> ToggleLock(string userId)
+        try
         {
-            await _adminService.ToggleLockoutAsync(userId);
-            var userDto = await _adminService.GetUserByIdAsync(userId);
-            return PartialView("_UserRowPartial", userDto);
+            await adminService.CreateUserAsync(model, "Manager");
+        }
+        catch (Exception ex)
+        {
+            ModelState.AddModelError(string.Empty, ex.Message);
+            Response.Headers["HX-Retarget"] = "#createUserModal .modal-body";
+            return PartialView("_CreateUserPartial", model);
         }
 
-        // GET: Admin/CreateUser
-        [HttpGet]
-        public IActionResult CreateUser()
-        {
-            return PartialView("_CreateUserPartial", new RegisterViewModel());
-        }
-
-        // POST: Admin/CreateUser
-        [HttpPost]
-        public async Task<IActionResult> CreateUser(RegisterViewModel model)
-        {
-            if (!ModelState.IsValid)
-            {
-                Response.Headers["HX-Retarget"] = "#createUserModal .modal-body";
-                return PartialView("_CreateUserPartial", model);
-            }
-
-            try
-            {
-                await _adminService.CreateUserAsync(model, "Manager");
-            }
-            catch (Exception ex)
-            {
-                ModelState.AddModelError("", ex.Message);
-                Response.Headers["HX-Retarget"] = "#createUserModal .modal-body";
-                return PartialView("_CreateUserPartial", model);
-            }
-
-            Response.Headers["HX-Trigger"] = "{\"closeCreateUserModal\": {}, \"refreshUsersList\": {}}";
-            return Ok();
-        }
+        Response.Headers["HX-Trigger"] = "{\"closeCreateUserModal\": {}, \"refreshUsersList\": {}}";
+        return Ok();
     }
 }
