@@ -1,17 +1,13 @@
 ﻿using Diplom_CRM.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Diplom_CRM.Controllers;
 
-public class DashboardController : Controller
+[Authorize]
+public class DashboardController(
+    IAnalyticsService _analyticsService) : Controller
 {
-    private readonly IAnalyticsService _analyticsService;
-
-    public DashboardController(IAnalyticsService analyticsService)
-    {
-        _analyticsService = analyticsService;
-    }
-
     // GET: Dashboard/Index
     [HttpGet]
     public async Task<IActionResult> Index()

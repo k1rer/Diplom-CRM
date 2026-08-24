@@ -1,22 +1,16 @@
-﻿using Diplom_CRM.Data;
-using Diplom_CRM.Models.DTO;
+﻿using Diplom_CRM.Models.DTO;
 using Diplom_CRM.Models.View;
 using Diplom_CRM.Services;
-using Diplom_CRM.Services.Implementations;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Diplom_CRM.Controllers;
 
-public class DealController : Controller
+[Authorize]
+public class DealController(
+    IDealService _dealService, 
+    IClientService _clientService) : Controller
 {
-    private readonly IDealService _dealService;
-    private readonly IClientService _clientService;
-
-    public DealController(IDealService dealService, IClientService clientService)
-    {
-        _dealService = dealService;
-        _clientService = clientService;
-    }
 
     // GET: Deal/Index
     [HttpGet]

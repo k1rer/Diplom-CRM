@@ -114,11 +114,28 @@
                             </div>
                             <div class="mb-2">
                                 <label class="form-label small">Тема *</label>
-                                <input type="text" name="Subject" class="form-control form-control-sm" maxlength="200" required />
+                                <input type="text" name="Subject" class="form-control form-control-sm" maxlength="200" required placeholder="Краткое описание" />
+                            </div>
+                            <div class="mb-2">
+                                <label for="activityScheduledDate" class="form-label small scheduled-label">Дата и время</label>
+                                <input type="datetime-local" class="form-control form-control-sm" id="activityScheduledDate" name="ScheduledDate"
+                                       value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" />
+                            </div>
+
+                            <div id="taskCompletionBlock" style="display:none;">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="taskIsCompleted" name="IsCompleted" value="true" />
+                                    <label class="form-check-label small" for="taskIsCompleted">Задача уже выполнена</label>
+                                </div>
+                                <div class="mb-2" id="completedDateGroup" style="display:none;">
+                                    <label for="activityCompletedDate" class="form-label small">Дата завершения</label>
+                                    <input type="datetime-local" class="form-control form-control-sm" id="activityCompletedDate" name="CompletedDate"
+                                           value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" />
+                                </div>
                             </div>
                             <div class="mb-2">
                                 <label class="form-label small">Описание</label>
-                                <textarea name="Description" class="form-control form-control-sm" rows="2"></textarea>
+                                <textarea name="Description" class="form-control form-control-sm" rows="2" placeholder="Подробности (необязательно)"></textarea>
                             </div>
                             <div class="d-flex justify-content-between align-items-center">
                                 <div class="btn-group btn-group-sm">
